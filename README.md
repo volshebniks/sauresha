@@ -23,7 +23,8 @@
 2. Осуществляем конфигурацию компонента в Home Assistant.
 - email и password - Ваши учетные данные личного кабинета на saures.ru.
 - sn - серийный номер контроллера
-- serial_numbers - сериный номер счетчика или датчика (задать в  личном кабине на saures.ru)
+- counters_sn - сериный номер счетчика или датчика (задать в  личном кабине на saures.ru)
+- controllers_sn - сериный номер контроллера 
 - flat_id (как заполнить указано ниже)
 
 #Это добавляем в sensors
@@ -32,10 +33,10 @@
   email: вашemail
   password: вашпароль
   flat_id: 2
-  serial_numbers: 
+  counters_sn: 
       - 12311111
       - 12111111
-  sn: 
+  controllers_sn: 
       - "84VVEBXXFCXX
 ```
 #Это добавляем, при наличии соответвующих датчиков  в binary_sensors
@@ -44,7 +45,7 @@
   email: вашemail
   password: вашпароль
   flat_id: 2
-  serial_numbers: 
+  counters_sn: 
       - 12311111
       - 12111111
 ```
