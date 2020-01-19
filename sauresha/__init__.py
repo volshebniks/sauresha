@@ -1,6 +1,6 @@
 CONF_FLAT_ID = 'flat_id'
-CONF_SERIAL_NUMBERS = 'serial_numbers'
-CONF_SN = 'sn'
+CONF_COUNTERS_SN = 'counters_sn'
+CONF_CONTROLLERS_SN = 'controllers_sn'
 
 
 

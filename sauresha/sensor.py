@@ -12,8 +12,8 @@ import voluptuous as vol
 
 from . import (
     CONF_FLAT_ID, 
-    CONF_SERIAL_NUMBERS,
-    CONF_SN
+    CONF_COUNTERS_SN,
+    CONF_CONTROLLERS_SN
 )
 
 import logging
@@ -24,8 +24,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_EMAIL): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_FLAT_ID): cv.positive_int,
-    vol.Optional(CONF_SERIAL_NUMBERS): cv.ensure_list,
-    vol.Optional(CONF_SN): cv.ensure_list                    
+    vol.Optional(CONF_COUNTERS_SN): cv.ensure_list,
+    vol.Optional(CONF_CONTROLLERS_SN): cv.ensure_list                    
 })
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -34,8 +34,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from .sauresha import SauresHA
     
     flat_id = config.get(CONF_FLAT_ID)
-    serial_numbers = config.get(CONF_SERIAL_NUMBERS, [])
-    sns = config.get(CONF_SN, [])
+    serial_numbers = config.get(CONF_COUNTERS_SN, [])
+    sns = config.get(CONF_CONTROLLERS_SN, [])
 
     controller = SauresHA(
         config.get('email'),
