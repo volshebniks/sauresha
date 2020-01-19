@@ -37,7 +37,7 @@
       - 12311111
       - 12111111
   controllers_sn: 
-      - "84VVEBXXFCXX
+      - 84VVEBXXFCXX
 ```
 #Это добавляем, при наличии соответвующих датчиков  в binary_sensors
 ```yaml
