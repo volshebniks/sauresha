@@ -5,7 +5,7 @@
 Интеграция котроллеров [Saures](https://www.saures.ru) c [Home Assistan](https://www.home-assistant.io/)
 # Описание
 
-В настоящее время поддреживаются следующие типы устройств от Saurus
+В настоящее время поддерживаются следующие типы устройств от Saurus
 1. Счетчик холодной воды (м³) = sensor в Home Assistant
 2. Счетчик горячей воды (м³) = sensor в Home Assistant
 3. Счетчик газа (м³) = sensor в Home Assistant
