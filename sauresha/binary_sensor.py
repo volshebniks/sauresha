@@ -31,12 +31,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Setup the sensor platform."""
 
-    from .saures import Saures
+    from .sauresha import SauresHA
     
     flat_id = config.get(CONF_FLAT_ID)
     serial_numbers = config.get(CONF_SERIAL_NUMBERS, [])
 
-    controller = Saures(
+    controller = SauresHA(
         config.get('email'),
         config.get('password')
     )
