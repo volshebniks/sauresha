@@ -1,0 +1,6 @@
+{
+  "name": "Integration Saures controllers with HA",
+  "content_in_root": false,
+  "domains": [ "sensors", "binary_sensors" ],
+  "homeassistant": "0.100.0"
+}

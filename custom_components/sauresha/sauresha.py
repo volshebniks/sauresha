@@ -53,6 +53,27 @@ class Meter:
         self.id = data.get('meter_id')
         self.input = data.get('input')
         self.values = data.get('vals', [])
+        if len(self.values) == 2:
+            self.t1=self.values[0]['value']
+            self.t2=self.values[1]['value']
+            self.t3='-'
+            self.t4='-'
+        elif len(self.values)==3:
+            self.t1=self.values[0]['value']
+            self.t2=self.values[1]['value']
+            self.t3=self.values[2]['value']
+            self.t4='-'
+        elif len(self.values)==4:
+            self.t1=self.values[0]['value']
+            self.t2=self.values[1]['value']
+            self.t3=self.values[2]['value']
+            self.t4=self.values[3]['value']
+        elif len(self.values)==0:
+            self.t1=data.get('value')
+            self.t2='-'
+            self.t3='-'
+            self.t4='-'
+            
 
 class Controller:
     def __init__(self, data):
@@ -74,7 +95,7 @@ class Controller:
 
 if __name__ == "__main__":
     s = SauresHA('demo@saures.ru', 'demo')
-    meter = s.get_meter(2, '227714-4')
+    meter = s.get_meter(358, '136661693')
     print(meter.data)
     #controller = s.get_controller(4731, '155100360017')
     #print(controller.data)

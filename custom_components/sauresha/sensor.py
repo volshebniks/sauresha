@@ -75,14 +75,28 @@ class SauresSensor(Entity):
         meter = self.current_meter
         self._state = meter.value
         self._attributes = dict()
-        self._attributes.update({
-            'friendly_name': meter.name,
-            'condition': meter.state,
-            'sn': meter.sn,
-            'type': meter.type,
-            'meter_id': meter.id,
-            'input': meter.input
-        })
+        if meter.type_number==8:
+            self._attributes.update({
+                'friendly_name': meter.name,
+                'condition': meter.state,
+                'sn': meter.sn,
+                'type': meter.type,
+                'meter_id': meter.id,
+                'input': meter.input,
+                't1': meter.t1,
+                't2': meter.t2,
+                't3': meter.t3,
+                't4': meter.t4
+            })
+        else:
+               self._attributes.update({
+                'friendly_name': meter.name,
+                'condition': meter.state,
+                'sn': meter.sn,
+                'type': meter.type,
+                'meter_id': meter.id,
+                'input': meter.input,
+            })
         if meter.type_number == 1 or meter.type_number == 2 or meter.type_number == 3:
             self._attributes.update({
                 'unit_of_measurement': 'м³'}) 
@@ -121,14 +135,28 @@ class SauresSensor(Entity):
         This is the only method that should fetch new data for Home Assistant.
         """
         meter = self.current_meter
-        self._attributes.update({
-            'friendly_name': meter.name,
-            'condition': meter.state,
-            'sn': meter.sn,
-            'type': meter.type,
-            'meter_id': meter.id,
-            'input': meter.input
-        })
+        if meter.type_number==8:
+            self._attributes.update({
+                'friendly_name': meter.name,
+                'condition': meter.state,
+                'sn': meter.sn,
+                'type': meter.type,
+                'meter_id': meter.id,
+                'input': meter.input,
+                't1': meter.t1,
+                't2': meter.t2,
+                't3': meter.t3,
+                't4': meter.t4
+            })
+        else:
+               self._attributes.update({
+                'friendly_name': meter.name,
+                'condition': meter.state,
+                'sn': meter.sn,
+                'type': meter.type,
+                'meter_id': meter.id,
+                'input': meter.input,
+            })
         self._state = meter.value
 
 class SauresControllerSensor(Entity):
