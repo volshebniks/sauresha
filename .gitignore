@@ -9,6 +9,7 @@
 *.pyproj
 *.sln
 *.pyproj.user
+*.7z
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
