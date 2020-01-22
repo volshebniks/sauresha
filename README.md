@@ -7,6 +7,10 @@
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-Yes-brightgreen.svg)](https://github.com/volshebniks/sauresha/graphs/commit-activity)
 [![GitHub issues](https://img.shields.io/github/issues/volshebniks/sauresha)](https://github.com/volshebniks/sauresha/issues)
 
+## Table of Contents
+
+* [Installation](#устнановка)
+  * [Manual Installation](#ручная-устнановка)
 
 
 
@@ -27,6 +31,18 @@
 9. Сухой контакт (0 – деактивирован, 1 – активирован) = binary_sensor в Home Assistant
 10. Электро-шаровой кран состояние (0 – не подключен модуль, 1 – неизвестное состояние, 2 – открыт, 3 - закрыт) = sensor в Home Assistant
 11. Непосредственно сами контроллеры = sensor в Home Assistant
+
+## Устнановка
+
+### Ручная устнановка
+
+1. Download the `anniversaries.zip` file from the
+   [latest release](https://github.com/pinkywafer/anniversaries/releases/latest).
+2. Unpack the release and copy the `custom_components/anniversaries` directory
+   into the `custom_components` directory of your Home Assistant
+   installation.
+3. Configure the `anniversaries` sensor.
+4. Restart Home Assistant.
 
 # Как использовать
 1. Добавляем компонент в Home Assistant
