@@ -7,6 +7,9 @@
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-Yes-brightgreen.svg)](https://github.com/volshebniks/sauresha/graphs/commit-activity)
 [![GitHub issues](https://img.shields.io/github/issues/volshebniks/sauresha)](https://github.com/volshebniks/sauresha/issues)
 
+
+Интеграция котроллеров [Saures](https://www.saures.ru) c [Home Assistan](https://www.home-assistant.io/)
+
 ## Table of Contents
 
 * [Установка](#установка)
@@ -19,7 +22,6 @@
 
 Для связи: <master@g-s-a.me>
 
-Интеграция котроллеров [Saures](https://www.saures.ru) c [Home Assistan](https://www.home-assistant.io/)
 # Описание
 
 В настоящее время поддерживаются следующие типы устройств от Saurus
