@@ -10,7 +10,7 @@
 
 Интеграция котроллеров [Saures](https://www.saures.ru) c [Home Assistan](https://www.home-assistant.io/)
 
-## Table of Contents
+## Содержание
 
 * [Установка](#установка)
   * [Ручная установка](#ручная-установка)
