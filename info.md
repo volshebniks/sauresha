@@ -10,12 +10,6 @@
 
 Интеграция котроллеров [Saures](https://www.saures.ru) c [Home Assistan](https://www.home-assistant.io/)
 
-## CUSTOM HEADER.
-
-### [Docs (installation, config, and issues)](https://github.com/volshebniks/sauresha)
-
-### Features
-
 ## Содержание
 
 * [Установка](#установка)
