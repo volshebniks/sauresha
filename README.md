@@ -4,6 +4,10 @@
 ![GitHub Release Date](https://img.shields.io/github/release-date/volshebniks/sauresha)
 [![GitHub](https://img.shields.io/github/license/volshebniks/sauresha)](LICENSE)
 
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-Yes-brightgreen.svg)](https://github.com/volshebniks/sauresha/graphs/commit-activity)
+[![GitHub issues](https://img.shields.io/github/issues/volshebniks/sauresha)](https://github.com/volshebniks/sauresha/issues)
+
+
 
 
 Для связи: <master@g-s-a.me>
