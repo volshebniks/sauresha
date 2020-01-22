@@ -9,11 +9,11 @@
 
 ## Table of Contents
 
-* [Installation](#устнановка)
-  * [Manual Installation](#ручная-установка)
-  * [Installation via HACS](#installation-via-hacs)
-* [Configuration](#как-использовать)
-  * [Configuration Parameters](#configuration-parameters)
+* [Установка](#устнановка)
+  * [Ручная установка(#ручная-установка)
+  * [Установка via HACS](#installation-via-hacs) - пока не работает
+* [Настройка](#как-использовать)
+  * [Параметры](#Параметры)
 
 
 
@@ -50,7 +50,9 @@
 
 ## Как использовать
 
-#Это добавляем в sensors
+### Параметры
+
+Это добавляем в sensors
 ```yaml
 - platform: sauresha
   email: вашemail
