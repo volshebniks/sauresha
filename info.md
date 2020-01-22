@@ -1,4 +1,21 @@
 # SauresHA
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/volshebniks/sauresha)](https://github.com/volshebniks/sauresha/releases)
+![GitHub Release Date](https://img.shields.io/github/release-date/volshebniks/sauresha)
+[![GitHub](https://img.shields.io/github/license/volshebniks/sauresha)](LICENSE)
+
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-Yes-brightgreen.svg)](https://github.com/volshebniks/sauresha/graphs/commit-activity)
+[![GitHub issues](https://img.shields.io/github/issues/volshebniks/sauresha)](https://github.com/volshebniks/sauresha/issues)
+
+## Table of Contents
+
+* [Установка](#устнановка)
+  * [Ручная установка](#ручная-установка)
+  * [Установка via HACS](#installation-via-hacs) - пока не работает
+* [Настройка](#как-использовать)
+  * [Параметры](#Параметры)
+
+
 
 Для связи: <master@g-s-a.me>
 
@@ -18,7 +35,10 @@
 10. Электро-шаровой кран состояние (0 – не подключен модуль, 1 – неизвестное состояние, 2 – открыт, 3 - закрыт) = sensor в Home Assistant
 11. Непосредственно сами контроллеры = sensor в Home Assistant
 
-# Как использовать
+## Устнановка
+
+### Ручная установка
+
 1. Добавляем компонент в Home Assistant
 Распаковываем архив. Папку sauresha берем целиком и копируем в custom_components.
 2. Осуществляем конфигурацию компонента в Home Assistant.
@@ -26,8 +46,13 @@
 - controllers_sn - сериный номер контроллера
 - counters_sn - сериный номер счетчика или датчика (задать в  личном кабине на saures.ru)
 - flat_id (как заполнить указано ниже)
+3. Перезагружаем HA
 
-#Это добавляем в sensors
+## Как использовать
+
+### Параметры
+
+Это добавляем в sensors
 ```yaml
 - platform: sauresha
   email: вашemail
@@ -39,7 +64,7 @@
   controllers_sn: 
       - 84VVEBXXFCXX
 ```
-#Это добавляем, при наличии соответвующих датчиков  в binary_sensors
+Это добавляем, при наличии соответвующих датчиков  в binary_sensors
 ```yaml
 - platform: sauresha
   email: вашemail
