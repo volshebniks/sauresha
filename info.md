@@ -7,14 +7,11 @@
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-Yes-brightgreen.svg)](https://github.com/volshebniks/sauresha/graphs/commit-activity)
 [![GitHub issues](https://img.shields.io/github/issues/volshebniks/sauresha)](https://github.com/volshebniks/sauresha/issues)
 
-
-Интеграция котроллеров [Saures](https://www.saures.ru) c [Home Assistan](https://www.home-assistant.io/)
-
 ## Содержание
 
-* [Установка](#установка)
+* [Установка](#устнановка)
   * [Ручная установка](#ручная-установка)
-  * [Установка via HACS](#installation-via-hacs) - пока не работает
+  * [Установка через HACS](#hacs_установка)
 * [Настройка](#как-использовать)
   * [Параметры](#Параметры)
 
@@ -22,6 +19,7 @@
 
 Для связи: <master@g-s-a.me>
 
+Интеграция котроллеров [Saures](https://www.saures.ru) c [Home Assistan](https://www.home-assistant.io/)
 # Описание
 
 В настоящее время поддерживаются следующие типы устройств от Saurus
@@ -37,7 +35,7 @@
 10. Электро-шаровой кран состояние (0 – не подключен модуль, 1 – неизвестное состояние, 2 – открыт, 3 - закрыт) = sensor в Home Assistant
 11. Непосредственно сами контроллеры = sensor в Home Assistant
 
-## Установка
+## Устнановка
 
 ### Ручная установка
 
@@ -49,6 +47,16 @@
 - counters_sn - сериный номер счетчика или датчика (задать в  личном кабине на saures.ru)
 - flat_id (как заполнить указано ниже)
 3. Перезагружаем HA
+
+### HACS установка
+
+1. Убедитесь, что [HACS](https://custom-components.github.io/hacs/) уже устновлен.
+2. Перейдите на закладку SETTINGS
+3. Введите https://github.com/volshebniks/sauresha   и выберите категорию Integration, нажмите Сохранить
+4. Новый репозитаторий Integration Saures controllers with HA будет добавлен на закладке Integration
+5. Устновите SauresHA из него 
+3. Настройте `sauresha` sensor и/или binary_sensor.
+4. Перезапустите HA.
 
 ## Как использовать
 
