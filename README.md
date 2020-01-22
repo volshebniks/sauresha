@@ -10,7 +10,10 @@
 ## Table of Contents
 
 * [Installation](#устнановка)
-  * [Manual Installation](#ручная-устнановка)
+  * [Manual Installation](#ручная-установка)
+  * [Installation via HACS](#installation-via-hacs)
+* [Configuration](#как-использовать)
+  * [Configuration Parameters](#configuration-parameters)
 
 
 
@@ -34,17 +37,8 @@
 
 ## Устнановка
 
-### Ручная устнановка
+### Ручная установка
 
-1. Download the `anniversaries.zip` file from the
-   [latest release](https://github.com/pinkywafer/anniversaries/releases/latest).
-2. Unpack the release and copy the `custom_components/anniversaries` directory
-   into the `custom_components` directory of your Home Assistant
-   installation.
-3. Configure the `anniversaries` sensor.
-4. Restart Home Assistant.
-
-# Как использовать
 1. Добавляем компонент в Home Assistant
 Распаковываем архив. Папку sauresha берем целиком и копируем в custom_components.
 2. Осуществляем конфигурацию компонента в Home Assistant.
@@ -52,6 +46,9 @@
 - controllers_sn - сериный номер контроллера
 - counters_sn - сериный номер счетчика или датчика (задать в  личном кабине на saures.ru)
 - flat_id (как заполнить указано ниже)
+3. Перезагружаем HA
+
+## Как использовать
 
 #Это добавляем в sensors
 ```yaml
