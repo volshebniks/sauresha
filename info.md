@@ -53,7 +53,7 @@
 1. Убедитесь, что [HACS](https://custom-components.github.io/hacs/) уже устновлен.
 2. Перейдите на закладку SETTINGS
 3. Введите https://github.com/volshebniks/sauresha   и выберите категорию Integration, нажмите Сохранить
-4. Новый репозитаторий Integration Saures controllers with HA будет добавлен на закладке Integration
+4. Новый репозиторий Integration Saures controllers with HA будет добавлен на закладке Integration
 5. Устновите SauresHA из него 
 3. Настройте `sauresha` sensor и/или binary_sensor.
 4. Перезапустите HA.
