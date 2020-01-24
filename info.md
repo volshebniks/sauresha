@@ -20,7 +20,7 @@
 
 Для связи: <master@g-s-a.me>
 
-Интеграция котроллеров [Saures](https://www.saures.ru) c [Home Assistan](https://www.home-assistant.io/)
+Интеграция котроллеров [Saures](https://www.saures.ru) c [Home Assistant](https://www.home-assistant.io/)
 # Описание
 
 В настоящее время поддерживаются следующие типы устройств от Saurus
