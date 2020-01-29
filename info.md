@@ -8,6 +8,16 @@
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-Yes-brightgreen.svg)](https://github.com/volshebniks/sauresha/graphs/commit-activity)
 [![GitHub issues](https://img.shields.io/github/issues/volshebniks/sauresha)](https://github.com/volshebniks/sauresha/issues)
 
+Пожертвование на развитие проекта  [Яндекс.Деньги](https://money.yandex.ru/to/41001566881198)
+
+## Update 1: Начиная с версии 0.3: 
+ * сделан переход на новое клиентское API
+ * добавлена необязательная настройка для sensor - scan_interval. Время обновления в минутах. По умолчанию = 10 минут.
+ * из-за перехода появились новые атрибуты у сенсоров.
+ 
+ Внимание - если данные будут обновляться с большой задержской, рекомендую откатится на предыдущую версию! 
+
+
 ## Содержание
 
 * [Установка](#устнановка)
@@ -36,7 +46,7 @@
 10. Электро-шаровой кран состояние (0 – не подключен модуль, 1 – неизвестное состояние, 2 – открыт, 3 - закрыт) = sensor в Home Assistant
 11. Непосредственно сами контроллеры = sensor в Home Assistant
 
-## Устнановка
+## Установка
 
 ### Ручная установка
 
@@ -69,6 +79,8 @@
   email: вашemail
   password: вашпароль
   flat_id: 2
+  # начиная с версии 0.3 (время обновления в минутах)
+  scan_interval: 10
   counters_sn: 
       - 12311111
       - 12111111
