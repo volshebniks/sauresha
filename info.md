@@ -4,6 +4,7 @@
 ![GitHub Release Date](https://img.shields.io/github/release-date/volshebniks/sauresha)
 [![GitHub](https://img.shields.io/github/license/volshebniks/sauresha)](LICENSE)
 
+![GitHub Releases](https://img.shields.io/github/downloads/volshebniks/sauresha/latest/total?color=purple&label=%20Release%20Downloads) ![GitHub All Releases](https://img.shields.io/github/downloads/volshebniks/sauresha/total?color=orange&label=Total%20Downloads)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-Yes-brightgreen.svg)](https://github.com/volshebniks/sauresha/graphs/commit-activity)
 [![GitHub issues](https://img.shields.io/github/issues/volshebniks/sauresha)](https://github.com/volshebniks/sauresha/issues)
 
@@ -19,7 +20,7 @@
 
 Для связи: <master@g-s-a.me>
 
-Интеграция котроллеров [Saures](https://www.saures.ru) c [Home Assistan](https://www.home-assistant.io/)
+Интеграция котроллеров [Saures](https://www.saures.ru) c [Home Assistant](https://www.home-assistant.io/)
 # Описание
 
 В настоящее время поддерживаются следующие типы устройств от Saurus
