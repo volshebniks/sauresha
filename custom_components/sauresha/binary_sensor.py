@@ -13,6 +13,7 @@ from homeassistant.const import (
 )
 
 import voluptuous as vol
+import re
 
 from . import (
     CONF_FLAT_ID, 
@@ -28,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Setup the sensor platform."""
 
     from .sauresha import SauresHA
@@ -55,8 +56,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         create_sensor = lambda serial_number: SauresBinarySensor(controller, flat_id, serial_number)
         sensors = list(map(create_sensor, serial_numbers))
 
-        if sensors: add_entities(sensors, True)
-       
+        if sensors: async_add_entities(sensors, True)
+    
 class SauresBinarySensor(Entity):
     """Representation of a BinarySensor."""
 
@@ -66,17 +67,7 @@ class SauresBinarySensor(Entity):
         self.controller = controller
         self.flat_id = flat_id
         self.serial_number = str(serial_number)
-        meter = self.current_meter
-        self._state = meter.value
         self._attributes = dict()
-        self._attributes.update({
-            'friendly_name': meter.name,
-            'condition': meter.state,
-            'sn': meter.sn,
-            'type': meter.type,
-            'meter_id': meter.id,
-            'input': meter.input
-        })
 
 
     @property
@@ -86,8 +77,10 @@ class SauresBinarySensor(Entity):
     @property
     def entity_id(self):
         """Return the entity_id of the sensor."""
-        sn = self.serial_number.replace('-', '_').lower()
-        return f'binary_sensor.sauresha_{self.flat_id}_{sn}'
+        sn = self.serial_number.replace('-', '_')
+        reg = re.compile('[^a-zA-Z0-9]')
+        sn = reg.sub('', sn).lower()
+        return f'sensor.sauresha_{self.flat_id}_{sn}'
 
     @property
     def is_on(self):
@@ -112,10 +105,8 @@ class SauresBinarySensor(Entity):
     def device_state_attributes(self):
         return self._attributes
 
-    def update(self):
-        """Fetch new state data for the sensor.
-        This is the only method that should fetch new data for Home Assistant.
-        """
+    async def async_fetch_state(self):
+        """Retrieve latest state."""
         self.controller.re_auth()
         meter = self.current_meter
         self._attributes.update({
@@ -126,4 +117,7 @@ class SauresBinarySensor(Entity):
             'meter_id': meter.id,
             'input': meter.input
         })
-        self._state = meter.value
+        return meter.value
+
+    async def async_update(self):
+        self._state = await self.async_fetch_state()

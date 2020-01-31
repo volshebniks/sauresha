@@ -11,26 +11,23 @@ class SauresHA:
         self.__session = Session()
         self._email = email
         self._password = password
-        if not self.__auth(email, password):
-            raise Exception('Invalid credentials')
-        
-    def __auth(self, email, password):
-        auth_data = self.__session.post('https://api.saures.ru/login', data={
-            'email': email, 
-            'password': password
-        }).json()
-        self._sid = auth_data['data']['sid']
-        return auth_data['status'] != 'bad'
 
     def re_auth(self):
-        auth_data = self.__session.post('https://api.saures.ru/login', data={
-            'email': self._email, 
-            'password': self._password 
-        }).json()
-        self._sid = auth_data['data']['sid']
+        auth_data = ""
+        try:
+            auth_data = self.__session.post('https://api.saures.ru/login', data={
+                'email': self._email, 
+                'password': self._password 
+            }).json()
+            if not auth_data:
+                raise Exception('Invalid credentials')
+            self._sid = auth_data['data']['sid']
+        except Exception:
+            raise Exception(auth_data)
         return auth_data['status'] != 'bad'
 
     def get_flats(self):
+        re_auth()
         flats = self.__session.get(f'https://api.saures.ru/user/objects', params={
             'sid': self._sid
         }).json()['data']['objects']
