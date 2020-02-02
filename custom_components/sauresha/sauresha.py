@@ -14,6 +14,7 @@ class SauresHA:
 
     def re_auth(self):
         auth_data = ""
+        blnReturn = False
         try:
             auth_data = self.__session.post('https://api.saures.ru/login', data={
                 'email': self._email, 
@@ -22,15 +23,19 @@ class SauresHA:
             if not auth_data:
                 raise Exception('Invalid credentials')
             self._sid = auth_data['data']['sid']
+            blnReturn = auth_data['status'] != 'bad'
         except Exception:
-            raise Exception(auth_data)
-        return auth_data['status'] != 'bad'
+             _LOGGER.warning(str(Exception))
+
+        return blnReturn
 
     def get_flats(self):
-        re_auth()
-        flats = self.__session.get(f'https://api.saures.ru/user/objects', params={
-            'sid': self._sid
-        }).json()['data']['objects']
+        flats = ""
+        if self.re_auth():
+            flats = self.__session.get(f'https://api.saures.ru/user/objects', params={
+                'sid': self._sid
+                }).json()['data']['objects']
+
         return flats
 
     def get_meters(self, flat_id):
@@ -122,8 +127,7 @@ class Controller:
 
 if __name__ == "__main__":
     s = SauresHA('demo@saures.ru', 'demo')
-    aa= s.re_auth()
-    bb= s.re_auth()
+    meter = s.get_flats()
     meter = s.get_meter(358, '136661693')
     print(meter.data)
     #controller = s.get_controller(4731, '155100360017')

@@ -138,48 +138,52 @@ class SauresSensor(Entity):
 
     async def async_fetch_state(self):
         """Retrieve latest state."""
+        strReturnValue = "Unknown"
+
         if self.isDebug:
             _LOGGER.warning("Update Start")
             
-        self.controller.re_auth()
-        meter = self.current_meter
-        if meter.type_number==8:
-            self._attributes.update({
-                'friendly_name': meter.name,
-                'condition': meter.state,
-                'sn': meter.sn,
-                'type': meter.type,
-                'meter_id': meter.id,
-                'input': meter.input,
-                'approve_dt': meter.approve_dt,
-                't1': meter.t1,
-                't2': meter.t2,
-                't3': meter.t3,
-                't4': meter.t4
-            })
-        else:
-            self._attributes.update({
-                'friendly_name': meter.name,
-                'condition': meter.state,
-                'sn': meter.sn,
-                'type': meter.type,
-                'meter_id': meter.id,
-                'input': meter.input,
-                'approve_dt': meter.approve_dt,
-            })
-        if self.isStart:
-            if meter.type_number == 1 or meter.type_number == 2 or meter.type_number == 3:
+        if self.controller.re_auth():
+            meter = self.current_meter
+            strReturnValue = meter.value
+            if meter.type_number==8:
                 self._attributes.update({
-                    'unit_of_measurement': 'м³'}) 
-            elif meter.type_number == 5:
+                    'friendly_name': meter.name,
+                    'condition': meter.state,
+                    'sn': meter.sn,
+                    'type': meter.type,
+                    'meter_id': meter.id,
+                    'input': meter.input,
+                    'approve_dt': meter.approve_dt,
+                    't1': meter.t1,
+                    't2': meter.t2,
+                    't3': meter.t3,
+                    't4': meter.t4
+                })
+            else:
                 self._attributes.update({
-                    'unit_of_measurement': '°C'})
-            elif meter.type_number == 8:
-                self._attributes.update({
-                    'unit_of_measurement': 'кВт·ч'})
+                    'friendly_name': meter.name,
+                    'condition': meter.state,
+                    'sn': meter.sn,
+                    'type': meter.type,
+                    'meter_id': meter.id,
+                    'input': meter.input,
+                    'approve_dt': meter.approve_dt,
+                })
+            if self.isStart:
+                if meter.type_number == 1 or meter.type_number == 2 or meter.type_number == 3:
+                    self._attributes.update({
+                        'unit_of_measurement': 'м³'}) 
+                elif meter.type_number == 5:
+                    self._attributes.update({
+                        'unit_of_measurement': '°C'})
+                elif meter.type_number == 8:
+                    self._attributes.update({
+                        'unit_of_measurement': 'кВт·ч'})
                     
-            self.isStart = False
-        return meter.value
+                self.isStart = False
+
+        return strReturnValue
         
     async def async_update(self):
         self._state = await self.async_fetch_state()
@@ -221,31 +225,35 @@ class SauresControllerSensor(Entity):
 
     async def async_fetch_state(self):
         """Retrieve latest state."""
-        self.controller.re_auth()
-        myController = self.current_controllerInfo
-        self._attributes.update({
-            'battery_level': myController.batery,
-            'condition': myController.state,
-            'sn': myController.sn,
-            'local_ip': myController.local_ip,
-            'last_connection': myController.last_connection,
-            'firmware':  myController.firmware,
-            'ssid':  myController.ssid,
-            'readout_dt':  myController.readout_dt,
-            'request_dt':  myController.request_dt,
-            'rssi':  myController.rssi,
-            'hardware':  myController.hardware,
-            'new_firmware':  myController.new_firmware,
-            'last_connection':  myController.last_connection,
-            'last_connection_warning':  myController.last_connection_warning,
-            'check_hours':  myController.check_hours,
-            'check_period_display':  myController.check_period_display,
-            'requests':  myController.requests,
-            'log':  myController.log,
-            'cap_state':  myController.cap_state,
-            'power_supply':  myController.power_supply
-        })
-        return myController.state
+        strReturnValue = "Unknown"
+
+        if  self.controller.re_auth():
+            myController = self.current_controllerInfo
+            strReturnValue = myController.state
+            self._attributes.update({
+                'battery_level': myController.batery,
+                'condition': myController.state,
+                'sn': myController.sn,
+                'local_ip': myController.local_ip,
+                'last_connection': myController.last_connection,
+                'firmware':  myController.firmware,
+                'ssid':  myController.ssid,
+                'readout_dt':  myController.readout_dt,
+                'request_dt':  myController.request_dt,
+                'rssi':  myController.rssi,
+                'hardware':  myController.hardware,
+                'new_firmware':  myController.new_firmware,
+                'last_connection':  myController.last_connection,
+                'last_connection_warning':  myController.last_connection_warning,
+                'check_hours':  myController.check_hours,
+                'check_period_display':  myController.check_period_display,
+                'requests':  myController.requests,
+                'log':  myController.log,
+                'cap_state':  myController.cap_state,
+                'power_supply':  myController.power_supply})
+                
+
+        return strReturnValue
         
     async def async_update(self):
         self._state = await self.async_fetch_state()

@@ -107,17 +107,19 @@ class SauresBinarySensor(Entity):
 
     async def async_fetch_state(self):
         """Retrieve latest state."""
-        self.controller.re_auth()
-        meter = self.current_meter
-        self._attributes.update({
-            'friendly_name': meter.name,
-            'condition': meter.state,
-            'sn': meter.sn,
-            'type': meter.type,
-            'meter_id': meter.id,
-            'input': meter.input
-        })
-        return meter.value
+        strReturnValue = "Unknown"
+        if self.controller.re_auth():
+            meter = self.current_meter
+            strReturnValue = meter.value
+            self._attributes.update({
+                'friendly_name': meter.name,
+                'condition': meter.state,
+                'sn': meter.sn,
+                'type': meter.type,
+                'meter_id': meter.id,
+                'input': meter.input
+            })
+        return strReturnValue
 
     async def async_update(self):
         self._state = await self.async_fetch_state()
