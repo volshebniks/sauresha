@@ -1,8 +1,10 @@
 import logging
 import functools
+from logging import Logger
+
 import requests
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Logger = logging.getLogger(__name__)
 
 
 class SauresHA:
@@ -133,7 +135,7 @@ class Controller:
 
 
 if __name__ == "__main__":
-    s = SauresHA('demo@saures.ru', 'demo', True)
+    s = SauresHA('demo@saures.ru', 'demo')
     meter = s.get_flats()
     meter = s.get_meter(358, '136661693')
     print(meter.data)

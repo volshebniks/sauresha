@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = homeassistant.components.binary_sensor.PLATFORM_SCHEMA.extend(
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Setup the sensor platform."""
 
     from .sauresha import SauresHA
@@ -62,7 +62,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                                                                                                       is_debug)
         sensors: List[SauresBinarySensor] = list(map(create_sensor, serial_numbers))
 
-        if sensors: async_add_entities(sensors, True)
+        if sensors:
+            add_entities(sensors, True)
 
 
 class SauresBinarySensor(Entity):
@@ -112,7 +113,7 @@ class SauresBinarySensor(Entity):
     def device_state_attributes(self):
         return self._attributes
 
-    async def async_fetch_state(self):
+    def fetch_state(self):
         """Retrieve latest state."""
         str_return_value = "Unknown"
         if self.controller.re_auth:
@@ -128,5 +129,5 @@ class SauresBinarySensor(Entity):
             })
         return str_return_value
 
-    async def async_update(self):
-        self._state = await self.async_fetch_state()
+    def update(self):
+        self._state = self.fetch_state()

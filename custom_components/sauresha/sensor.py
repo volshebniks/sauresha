@@ -12,7 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import track_time_interval
 from .sauresha import SauresHA
 
 from . import (
@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None, scan_interval=SCAN_INTERVAL):
+def setup_platform(hass, config, add_entities, discovery_info=None, scan_interval=SCAN_INTERVAL):
     """Setup the sensor platform."""
 
     from .sauresha import SauresHA
@@ -48,7 +48,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     serial_numbers = config.get(CONF_COUNTERS_SN, [])
     sns = config.get(CONF_CONTROLLERS_SN, [])
     scan_interval = config.get(CONF_SCAN_INTERVAL)
-    is_debug = config.get(CONF_DEBUG)
+    is_debug: bool = config.get(CONF_DEBUG)
 
     if is_debug:
         _LOGGER.warning("scan_interval=" + str(scan_interval))
@@ -71,12 +71,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     if int(flat_id) > 0:
         create_sensor: Callable[[Any], SauresSensor] = lambda serial_number: SauresSensor(hass, controller, flat_id,
-                                                                                          serial_number, is_debug,
+                                                                                          serial_number,
+                                                                                          is_debug,
                                                                                           scan_interval)
         sensors: List[SauresSensor] = list(map(create_sensor, serial_numbers))
 
         if sensors:
-            async_add_entities(sensors, True)
+            add_entities(sensors, True)
 
         create_my_controller: Callable[[Any], SauresControllerSensor] = lambda sn: SauresControllerSensor(hass,
                                                                                                           controller,
@@ -86,7 +87,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         my_controllers: List[SauresControllerSensor] = list(map(create_my_controller, sns))
 
         if my_controllers:
-            async_add_entities(my_controllers, True)
+            add_entities(my_controllers, True)
 
 
 class SauresSensor(Entity):
@@ -111,12 +112,12 @@ class SauresSensor(Entity):
 
         def refresh(event_time):
             """Get the latest data from Transmission."""
-            self.async_update()
+            self.update()
 
         if self.isDebug:
             _LOGGER.warning("scan_interval=" + str(scan_interval))
 
-        async_track_time_interval(
+        track_time_interval(
             hass, refresh, scan_interval
         )
 
@@ -145,7 +146,7 @@ class SauresSensor(Entity):
     def device_state_attributes(self):
         return self._attributes
 
-    async def async_fetch_state(self):
+    def fetch_state(self):
         """Retrieve latest state."""
         str_return_value = "Unknown"
 
@@ -194,8 +195,8 @@ class SauresSensor(Entity):
 
         return str_return_value
 
-    async def async_update(self):
-        self._state = await self.async_fetch_state()
+    def update(self):
+        self._state = self.fetch_state()
 
 
 class SauresControllerSensor(Entity):
@@ -243,16 +244,16 @@ class SauresControllerSensor(Entity):
 
         def refresh(event_time):
             """Get the latest data from Transmission."""
-            self.async_update()
+            self.update()
 
         if self.isDebug:
             _LOGGER.warning("scan_interval=" + str(scan_interval))
 
-        async_track_time_interval(
+        track_time_interval(
             hass, refresh, scan_interval
         )
 
-    async def async_fetch_state(self):
+    def fetch_state(self):
         """Retrieve latest state."""
         str_return_value = "Unknown"
 
@@ -282,5 +283,5 @@ class SauresControllerSensor(Entity):
 
         return str_return_value
 
-    async def async_update(self):
-        self._state = await self.async_fetch_state()
+    def update(self):
+        self._state = self.fetch_state()
