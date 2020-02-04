@@ -1,31 +1,30 @@
-#Provides a binary sensor for Saures.
 import logging
-
-_LOGGER = logging.getLogger(__name__)
-
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA
+from typing import List, Any, Callable
+import homeassistant.components.binary_sensor
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-from homeassistant.const import (
-    CONF_EMAIL,  
-    CONF_PASSWORD
-)
-
 import voluptuous as vol
 import re
 
-from . import (
-    CONF_FLAT_ID, 
-    CONF_COUNTERS_SN,
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_EMAIL
 )
 
+from . import (
+    CONF_FLAT_ID,
+    CONF_COUNTERS_SN,
+    CONF_DEBUG
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+_LOGGER = logging.getLogger(__name__)
+
+PLATFORM_SCHEMA = homeassistant.components.binary_sensor.PLATFORM_SCHEMA.extend({
     vol.Required(CONF_EMAIL): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_FLAT_ID): cv.positive_int,
-    vol.Optional(CONF_COUNTERS_SN): cv.ensure_list                  
+    vol.Optional(CONF_COUNTERS_SN): cv.ensure_list,
+    vol.Optional(CONF_DEBUG, default=False): cv.boolean,
 })
 
 
@@ -33,42 +32,50 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Setup the sensor platform."""
 
     from .sauresha import SauresHA
-    
+
     flat_id = config.get(CONF_FLAT_ID)
     serial_numbers = config.get(CONF_COUNTERS_SN, [])
+    _hass = hass
+    _discovery_info = discovery_info
+    is_debug = config.get(CONF_DEBUG)
 
     controller = SauresHA(
         config.get('email'),
-        config.get('password')
+        config.get('password'),
+        is_debug
     )
 
-    if int(flat_id)==0: 
-        flats=controller.get_flats()
-        if len(flats)==1: 
-            flat_id=str(flats[0].get('id'))
-            strHouse = str(flats[0].get('house'))
-            _LOGGER.warning("ID flat:" + strHouse + " : " + flat_id)
-        else: 
+    if int(flat_id) == 0:
+        flats = controller.get_flats()
+        if len(flats) == 1:
+            flat_id = str(flats[0].get('id'))
+            str_house = str(flats[0].get('house'))
+            _LOGGER.warning("ID flat:" + str_house + " : " + flat_id)
+        else:
             for val in flats:
                 _LOGGER.warning("ID flat:" + str(val.get('house')) + " : " + str(val.get('id')))
 
-    if int(flat_id)>0:        
-        create_sensor = lambda serial_number: SauresBinarySensor(controller, flat_id, serial_number)
-        sensors = list(map(create_sensor, serial_numbers))
+    if int(flat_id) > 0:
+        create_sensor: Callable[[Any], SauresBinarySensor] = lambda serial_number: SauresBinarySensor(controller,
+                                                                                                      flat_id,
+                                                                                                      serial_number,
+                                                                                                      is_debug)
+        sensors: List[SauresBinarySensor] = list(map(create_sensor, serial_numbers))
 
         if sensors: async_add_entities(sensors, True)
-    
+
+
 class SauresBinarySensor(Entity):
     """Representation of a BinarySensor."""
 
-    def __init__(self, controller, flat_id, serial_number):
+    def __init__(self, controller, flat_id, serial_number, is_debug):
         """Initialize the sensor."""
 
         self.controller = controller
         self.flat_id = flat_id
         self.serial_number = str(serial_number)
         self._attributes = dict()
-
+        self.isDebug = is_debug
 
     @property
     def current_meter(self):
@@ -80,7 +87,7 @@ class SauresBinarySensor(Entity):
         sn = self.serial_number.replace('-', '_')
         reg = re.compile('[^a-zA-Z0-9]')
         sn = reg.sub('', sn).lower()
-        return f'sensor.sauresha_{self.flat_id}_{sn}'
+        return f'binary_sensor.sauresha_{self.flat_id}_{sn}'
 
     @property
     def is_on(self):
@@ -107,10 +114,10 @@ class SauresBinarySensor(Entity):
 
     async def async_fetch_state(self):
         """Retrieve latest state."""
-        strReturnValue = "Unknown"
-        if self.controller.re_auth():
+        str_return_value = "Unknown"
+        if self.controller.re_auth:
             meter = self.current_meter
-            strReturnValue = meter.value
+            str_return_value = meter.value
             self._attributes.update({
                 'friendly_name': meter.name,
                 'condition': meter.state,
@@ -119,7 +126,7 @@ class SauresBinarySensor(Entity):
                 'meter_id': meter.id,
                 'input': meter.input
             })
-        return strReturnValue
+        return str_return_value
 
     async def async_update(self):
         self._state = await self.async_fetch_state()

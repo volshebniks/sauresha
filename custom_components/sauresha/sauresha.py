@@ -1,40 +1,48 @@
-from requests import Session
-from functools import reduce
-from json import dumps
-
 import logging
+import functools
+import requests
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class SauresHA:
-    def __init__(self, email, password):
-        self.__session = Session()
+    _sid: str
+    _debug: bool
+
+    def __init__(self, email, password, is_debug):
+        self.__session = requests.Session()
         self._email = email
         self._password = password
+        self._debug = is_debug
 
+    @property
+    def sid(self):
+        return self._sid
+
+    @property
     def re_auth(self):
-        auth_data = ""
-        blnReturn = False
+        bln_return = False
         try:
             auth_data = self.__session.post('https://api.saures.ru/login', data={
-                'email': self._email, 
-                'password': self._password 
+                'email': self._email,
+                'password': self._password
             }).json()
             if not auth_data:
                 raise Exception('Invalid credentials')
             self._sid = auth_data['data']['sid']
-            blnReturn = auth_data['status'] != 'bad'
+            bln_return = auth_data['status'] != 'bad'
         except Exception:
-             _LOGGER.warning(str(Exception))
+            if self._debug:
+                _LOGGER.warning(Exception)
 
-        return blnReturn
+        return bln_return
 
     def get_flats(self):
         flats = ""
-        if self.re_auth():
+        if self.re_auth:
             flats = self.__session.get(f'https://api.saures.ru/user/objects', params={
                 'sid': self._sid
-                }).json()['data']['objects']
+            }).json()['data']['objects']
 
         return flats
 
@@ -43,24 +51,23 @@ class SauresHA:
             'id': flat_id,
             'sid': self._sid
         }).json()['data']['sensors']
-        return reduce(list.__add__, map(lambda sensor: sensor['meters'], sensors))
+        return functools.reduce(list.__add__, map(lambda sensor: sensor['meters'], sensors))
 
     def get_controllers(self, flat_id):
         controllers = self.__session.get(f'https://api.saures.ru/object/meters', params={
             'id': flat_id,
             'sid': self._sid
         }).json()['data']['sensors']
-        return reduce(list.__add__, map(lambda sensor: controllers, controllers))
-
+        return functools.reduce(list.__add__, map(lambda sensor: controllers, controllers))
 
     def get_meter(self, flat_id, serial_number):
         meters = self.get_meters(flat_id)
-        return next((Meter(meter) for meter in meters if meter['sn'] == serial_number), Meter(dict()))
-
+        return next((Meter(METER) for METER in meters if METER['sn'] == serial_number), Meter(dict()))
 
     def get_controller(self, flat_id, sn):
         controllers = self.get_controllers(flat_id)
-        return next((Controller(controller) for controller in controllers if controller['sn'] == sn), Controller(dict()))
+        return next((Controller(controller) for controller in controllers if controller['sn'] == sn),
+                    Controller(dict()))
 
 
 class Meter:
@@ -78,33 +85,33 @@ class Meter:
 
         self.values = data.get('vals', [])
         if len(self.values) == 2:
-            self.t1=self.values[0]['value']
-            self.t2=self.values[1]['value']
-            self.t3='-'
-            self.t4='-'
-        elif len(self.values)==3:
-            self.t1=self.values[0]['value']
-            self.t2=self.values[1]['value']
-            self.t3=self.values[2]['value']
-            self.t4='-'
-        elif len(self.values)==4:
-            self.t1=self.values[0]['value']
-            self.t2=self.values[1]['value']
-            self.t3=self.values[2]['value']
-            self.t4=self.values[3]['value']
-        elif len(self.values)==0:
-            self.t1=data.get('value')
-            self.t2='-'
-            self.t3='-'
-            self.t4='-'
-            
+            self.t1 = self.values[0]['value']
+            self.t2 = self.values[1]['value']
+            self.t3 = '-'
+            self.t4 = '-'
+        elif len(self.values) == 3:
+            self.t1 = self.values[0]['value']
+            self.t2 = self.values[1]['value']
+            self.t3 = self.values[2]['value']
+            self.t4 = '-'
+        elif len(self.values) == 4:
+            self.t1 = self.values[0]['value']
+            self.t2 = self.values[1]['value']
+            self.t3 = self.values[2]['value']
+            self.t4 = self.values[3]['value']
+        elif len(self.values) == 0:
+            self.t1 = data.get('value')
+            self.t2 = '-'
+            self.t3 = '-'
+            self.t4 = '-'
+
 
 class Controller:
     def __init__(self, data):
         self.data = data
         self.name = data.get('sn')
         self.sn = data.get('sn')
-        self.batery = data.get('bat')
+        self.battery = data.get('bat')
         self.ssid = data.get('ssid')
         self.local_ip = data.get('local_ip')
         self.firmware = data.get('firmware')
@@ -114,7 +121,7 @@ class Controller:
         self.state = data.get('state', {}).get('name')
         self.rssi = data.get('rssi')
         self.hardware = data.get('hardware')
-        self.new_firmware = data.get('new_firmware')  
+        self.new_firmware = data.get('new_firmware')
         self.last_connection = data.get('last_connection')
         self.last_connection_warning = data.get('last_connection_warning')
         self.check_hours = data.get('check_hours')
@@ -126,9 +133,9 @@ class Controller:
 
 
 if __name__ == "__main__":
-    s = SauresHA('demo@saures.ru', 'demo')
+    s = SauresHA('demo@saures.ru', 'demo', True)
     meter = s.get_flats()
     meter = s.get_meter(358, '136661693')
     print(meter.data)
-    #controller = s.get_controller(4731, '155100360017')
-    #print(controller.data)
+    # controller = s.get_controller(4731, '155100360017')
+    # print(controller.data)
