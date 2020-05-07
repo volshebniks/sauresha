@@ -7,6 +7,9 @@
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-Yes-brightgreen.svg)](https://github.com/volshebniks/sauresha/graphs/commit-activity)
 [![GitHub issues](https://img.shields.io/github/issues/volshebniks/sauresha)](https://github.com/volshebniks/sauresha/issues)
 
+[![Donate](https://img.shields.io/badge/donate-Coffee-yellow.svg)](https://https://www.buymeacoffee.com/RlnBV9r)
+[![Donate](https://img.shields.io/badge/donate-Yandex-red.svg)](https://money.yandex.ru/to/41001566881198)
+
 Пожертвование на развитие проекта  [Яндекс.Деньги](https://money.yandex.ru/to/41001566881198)
 
 ## Update 1: Начиная с версии 0.3: 
