@@ -87,16 +87,19 @@ class Meter:
 
         self.values = data.get('vals', [])
         if len(self.values) == 2:
+            self.value = '{0}/{1}'.format(self.values[0], self.values[1])
             self.t1 = self.values[0]
             self.t2 = self.values[1]
             self.t3 = '-'
             self.t4 = '-'
         elif len(self.values) == 3:
+            self.value = '{0}/{1}/{2}'.format(self.values[0], self.values[1],self.values[2])
             self.t1 = self.values[0]
             self.t2 = self.values[1]
             self.t3 = self.values[2]
             self.t4 = '-'
         elif len(self.values) == 4:
+            self.value = '{0}/{1}/{2}/{3}'.format(self.values[0], self.values[1], self.values[2],self.values[3])
             self.t1 = self.values[0]
             self.t2 = self.values[1]
             self.t3 = self.values[2]
