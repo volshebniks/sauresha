@@ -72,11 +72,15 @@ class SauresHA:
         period = now - self._last_getMeters_time
         if (period.total_seconds() / 60) > 5:
             self._last_getMeters_time = datetime.datetime.now()
-            sensors = self.__session.get(f'https://api.saures.ru/1.0/object/meters', params={
-                'id': flat_id,
-                'sid': self._sid
-            }).json()['data']['sensors']
-            self._sensors = sensors
+            try:
+                sensors = self.__session.get(f'https://api.saures.ru/1.0/object/meters', params={
+                    'id': flat_id,
+                    'sid': self._sid
+                }).json()['data']['sensors']
+                self._sensors = sensors
+            except Exception:
+                if self._debug:
+                    _LOGGER.warning(Exception)
 
         return functools.reduce(list.__add__, map(lambda sensor: sensor['meters'], self._sensors))
 
@@ -85,10 +89,14 @@ class SauresHA:
         period = now - self._last_getMeters_time
         if (period.total_seconds() / 60) > 5:
             self._last_getMeters_time = datetime.datetime.now()
-            controllers = self.__session.get(f'https://api.saures.ru/1.0/object/meters', params={
-                'id': flat_id,
-                'sid': self._sid
-            }).json()['data']['sensors']
+            try:
+                controllers = self.__session.get(f'https://api.saures.ru/1.0/object/meters', params={
+                    'id': flat_id,
+                    'sid': self._sid
+                }).json()['data']['sensors']
+            except Exception:
+                if self._debug:
+                    _LOGGER.warning(Exception)
 
             self._sensors = controllers
         return functools.reduce(list.__add__, map(lambda sensor: self._sensors, self._sensors))
