@@ -33,10 +33,15 @@
    <br />Рекомендую в настройках указать:
 ```yaml
   scan_interval:
-    minutes: 20 
+    minutes: 30 
 ```
    Иначе могут быть блокировки в будущем.
- 
+
+## Update 5: Начиная с версии 0.6: 
+ * значительно изменен механизм настройки
+ * можно задавать свои мена для всего
+ * можно в настройках делать ссылки на !secret
+ * добавил в manifest, version
 
 ## Содержание
 
@@ -93,20 +98,24 @@
 
 ### Параметры
 
-Это добавляем в sensors
+Это добавляем в sensors (вместо ссылок на secret, можно использовать реальные название. Если имя оставить пустым,
+	то оно будет сгенерено автоматически)
 ```yaml
-- platform: sauresha
-  email: вашemail
-  password: вашпароль
-  flat_id: 2
-  # начиная с версии 0.3 
-  scan_interval:
-    minutes: 20 
-  counters_sn: 
-      - 12311111
-      - 12111111
-  controllers_sn: 
-      - 84VVEBXXFCXX
+sensor:
+  - platform: sauresha
+    email: !secret saures_login
+    password: !secret saures_pass
+    flat_id: !secret saures_flat
+    controllers:
+      !secret saures_controller_id:
+        name: my1
+    counters:
+      !secret saures_controller_cold:
+        name: cold_water
+      !secret saures_controller_hot:
+        name: hot_water
+    scan_interval:
+      minutes: 30
 ```
 Это добавляем, при наличии соответвующих датчиков  в binary_sensors
 ```yaml
@@ -114,9 +123,11 @@
   email: вашemail
   password: вашпароль
   flat_id: 2
-  counters_sn: 
-      - 12311111
-      - 12111111
+  counters:
+	!secret saures_controller_1:
+	  name: "12311111"
+   !secret saures_controller_2:
+      name: ""
 ```
 
 * Важно: Если не знаете как в личном кабине увидеть flat_id - высвечивается при наведении на адресс в адресной сроке, то вводите flat_id : 0. При наличии у вас только одного созданного адреса, работать будет и так. Но все же рекомендую - его узнать и заполнить - будет меньше запросов к API saures.
