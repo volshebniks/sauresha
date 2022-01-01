@@ -222,13 +222,13 @@ class SauresSensor(Entity):
             if self.isStart:
                 if meter.type_number == 1 or meter.type_number == 2 or meter.type_number == 3:
                     self._attributes.update({
-                        'unit_of_measurement': 'м³'})
+                        'unit_of_measurement': 'm³'})
                 elif meter.type_number == 5:
                     self._attributes.update({
                         'unit_of_measurement': '°C'})
                 elif meter.type_number == 8:
                     self._attributes.update({
-                        'unit_of_measurement': 'кВт·ч'})
+                        'unit_of_measurement': 'kWh'})
 
                 self.isStart = False
 
