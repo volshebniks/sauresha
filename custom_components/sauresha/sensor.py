@@ -220,15 +220,20 @@ class SauresSensor(Entity):
                     'approve_dt': meter.approve_dt,
                 })
             if self.isStart:
-                if meter.type_number == 1 or meter.type_number == 2 or meter.type_number == 3:
+                if meter.type_number == 1 or meter.type_number == 2:
                     self._attributes.update({
                         'unit_of_measurement': 'm³'})
+                if meter.type_number == 3:
+                    self._attributes.update({
+                        'unit_of_measurement': 'm³',
+                        'device_class': 'gas'})
                 elif meter.type_number == 5:
                     self._attributes.update({
                         'unit_of_measurement': '°C'})
                 elif meter.type_number == 8:
                     self._attributes.update({
-                        'unit_of_measurement': 'kWh'})
+                        'unit_of_measurement': 'kWh',
+                        'device_class': 'energy'})
 
                 self.isStart = False
 
