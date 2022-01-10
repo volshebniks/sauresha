@@ -224,7 +224,7 @@ class SauresSensor(Entity):
                     self._attributes.update({
                         'unit_of_measurement': 'm³',
                         'state_class': 'total_increasing'})
-                if meter.type_number == 3:
+                elif meter.type_number == 3:
                     self._attributes.update({
                         'unit_of_measurement': 'm³',
                         'device_class': 'gas',
