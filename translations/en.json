@@ -1,0 +1,13 @@
+{
+    "options": {
+      "step": {
+        "init": {
+          "title": "Saures HA",
+          "data": {
+            "username": "логин",
+            "password": "пароль"
+          }
+        }
+      }
+    }
+  }
