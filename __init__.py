@@ -24,7 +24,6 @@ from .api import SauresHA
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=1)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -32,9 +31,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_EMAIL): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): vol.All(
-                    cv.time_period, cv.positive_timedelta
-                ),
+                vol.Optional(CONF_SCAN_INTERVAL, default=10): cv.positive_int,
                 vol.Optional(CONF_DEBUG, default=False): cv.boolean,
                 vol.Optional(CONF_FLATS, default=""): cv.string,
             }
@@ -53,27 +50,6 @@ def setup(hass: HomeAssistant, config: dict) -> bool:
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.source == SOURCE_IMPORT:
             hass.config_entries.remove(entry.entry_id)
-
-    if DOMAIN not in config:
-        return True
-
-    SauresAPI: SauresHA = SauresHA(
-        hass,
-        config[DOMAIN].get(CONF_EMAIL),
-        config[DOMAIN].get(CONF_PASSWORD),
-        config[DOMAIN].get(CONF_DEBUG),
-        config[DOMAIN].get(CONF_FLATS),
-    )
-    SauresAPI.fetch_data()
-
-    hass.data[DOMAIN] = {
-        CONF_SCAN_INTERVAL: config[DOMAIN].get(CONF_SCAN_INTERVAL),
-        CONF_DEBUG: config[DOMAIN].get(CONF_DEBUG),
-        COORDINATOR: SauresAPI,
-    }
-
-    for component in PLATFORMS:
-        hass.helpers.discovery.load_platform(component, DOMAIN, {}, config)
 
     return True
 

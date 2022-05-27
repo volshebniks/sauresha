@@ -20,11 +20,9 @@
   },
   "options": {
       "step": {
-          "user": {
+          "init": {
               "data": {
-                  "flat": "квартиры",
-                  "password": "Объект weather включен"
-
+                  "flat": "квартиры"
               },
               "title": "Настройки Saures"
           }

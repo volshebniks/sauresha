@@ -16,6 +16,7 @@ ATTRIBUTION = "Home assistant component for Saures"
 ISSUE_URL = "https://github.com/volshebniks/sauresha/issues"
 
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
+
 DOMAIN = "sauresha"
 
 STARTUP_MESSAGE = f"""

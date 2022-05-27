@@ -4,13 +4,13 @@ import re
 from datetime import timedelta
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
+
+from .api import SauresHA
 from .const import CONF_COMMAND_ACTIVATE, CONF_COMMAND_DEACTIVATE
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL_BS = timedelta(minutes=1)
-SCAN_INTERVAL = timedelta(minutes=10)
 
 
 class SauresSensor(Entity):
@@ -31,7 +31,7 @@ class SauresSensor(Entity):
     ):
         """Initialize the sensor."""
 
-        self.controller = controller
+        self.controller: SauresHA = controller
         self.flat_id = flat_id
         self.serial_number = str(sn)
         self.counter_name = counter_name
@@ -40,21 +40,20 @@ class SauresSensor(Entity):
         self._attributes = dict()
         self._state = ""
         self.meter_id = meter_id
-        self.scan_interval = SCAN_INTERVAL
+        self.scan_interval = scan_interval
 
-        self.set_scan_interval(hass, scan_interval)
+        self.set_scan_interval(hass, timedelta(minutes=scan_interval))
 
     def set_scan_interval(self, hass: object, scan_interval: timedelta):
         """Update scan interval."""
 
-        def refresh(event_time):
-            """Get the latest data from Transmission."""
-            self.update()
+        async def refresh(event_time):
+            await self.async_update()
 
         if self.isDebug:
             _LOGGER.warning("Scan_interval = %s", str(scan_interval))
 
-        track_time_interval(hass, refresh, scan_interval)
+        async_track_time_interval(hass, refresh, scan_interval)
 
     @property
     def current_meter(self):
@@ -91,14 +90,15 @@ class SauresSensor(Entity):
     def extra_state_attributes(self):
         return self._attributes
 
-    def fetch_state(self):
+    async def async_fetch_state(self):
         """Retrieve latest state."""
         str_return_value = "Unknown"
 
         if self.isDebug:
-            _LOGGER.warning("Update Start")
-
-        if self.controller.re_auth:
+            _LOGGER.warning("Update Start meter_id: %s", str(self.meter_id))
+        auth_data = await self.controller.auth()
+        if auth_data:
+            await self.controller.async_fetch_data()
             meter = self.current_meter
             str_return_value = meter.value
             if meter.type_number == 8:
@@ -158,13 +158,16 @@ class SauresSensor(Entity):
         self._attributes.update({"last_update_time": datetime.datetime.now()})
 
         self._attributes.update(
-            {"next_update_time": datetime.datetime.now() + self.scan_interval}
+            {
+                "next_update_time": datetime.datetime.now()
+                + timedelta(minutes=self.scan_interval)
+            }
         )
 
         return str_return_value
 
-    def update(self):
-        self._state = self.fetch_state()
+    async def async_update(self):
+        self._state = await self.async_fetch_state()
 
 
 class SauresBinarySensor(Entity):
@@ -183,7 +186,7 @@ class SauresBinarySensor(Entity):
     ):
         """Initialize the sensor."""
 
-        self.controller = controller
+        self.controller: SauresHA = controller
         self.flat_id = flat_id
         self.meter_id = meter_id
         self.serial_number = serial_number
@@ -191,21 +194,20 @@ class SauresBinarySensor(Entity):
         self._attributes = dict()
         self.isDebug = is_debug
         self._state = False
-        self.scan_interval = SCAN_INTERVAL_BS
+        self.scan_interval = scan_interval
 
-        self.set_scan_interval(hass, scan_interval)
+        self.set_scan_interval(hass, timedelta(minutes=self.scan_interval))
 
     def set_scan_interval(self, hass: object, scan_interval: timedelta):
         """Update scan interval."""
 
-        def refresh(event_time):
-            """Get the latest data from Transmission."""
-            self.update()
+        async def refresh(event_time):
+            await self.async_update()
 
         if self.isDebug:
             _LOGGER.warning("Scan_interval = %s", str(scan_interval))
 
-        track_time_interval(hass, refresh, scan_interval)
+        async_track_time_interval(hass, refresh, scan_interval)
 
     @property
     def current_sensor(self):
@@ -251,10 +253,12 @@ class SauresBinarySensor(Entity):
     def extra_state_attributes(self):
         return self._attributes
 
-    def fetch_state(self):
+    async def async_fetch_state(self):
         """Retrieve latest state."""
         return_value = False
-        if self.controller.re_auth:
+        auth_data = await self.controller.auth()
+        if auth_data:
+            await self.controller.async_fetch_data()
             meter = self.current_sensor
             return_value = meter.value
             self._attributes.update(
@@ -276,13 +280,16 @@ class SauresBinarySensor(Entity):
         self._attributes.update({"last_update_time": datetime.datetime.now()})
 
         self._attributes.update(
-            {"next_update_time": datetime.datetime.now() + self.scan_interval}
+            {
+                "next_update_time": datetime.datetime.now()
+                + timedelta(minutes=self.scan_interval)
+            }
         )
 
         return return_value
 
-    def update(self):
-        self._state = self.fetch_state()
+    async def async_update(self):
+        self._state = await self.async_fetch_state()
 
 
 class SauresControllerSensor(Entity):
@@ -298,10 +305,10 @@ class SauresControllerSensor(Entity):
         sn,
         counter_name,
         is_debug,
-        scan_interval=SCAN_INTERVAL,
+        scan_interval,
     ):
         """Initialize the sensor."""
-        self.controller = controller
+        self.controller: SauresHA = controller
         self.flat_id = flat_id
         self.serial_number = str(sn)
         self.counter_name = str(counter_name)
@@ -309,8 +316,6 @@ class SauresControllerSensor(Entity):
         self.isDebug = is_debug
         self._attributes = dict()
         self.scan_interval = scan_interval
-
-        self.set_scan_interval(hass, scan_interval)
 
     @property
     def current_controller_info(self):
@@ -341,27 +346,31 @@ class SauresControllerSensor(Entity):
     def extra_state_attributes(self):
         return self._attributes
 
-    def set_scan_interval(self, hass: object, scan_interval: timedelta):
+    async def async_set_scan_interval(self, hass: object, scan_interval: timedelta):
         """Update scan interval."""
 
-        def refresh(event_time):
-            """Get the latest data from Transmission."""
-            self.update()
+        async def refresh(event_time):
+            await self.async_update()
 
         if self.isDebug:
             _LOGGER.warning("Scan_interval = %s", str(scan_interval))
 
-        track_time_interval(hass, refresh, scan_interval)
+        async_track_time_interval(hass, refresh, timedelta(minutes=scan_interval))
 
-    def fetch_state(self):
+    async def async_fetch_state(self):
         """Retrieve latest state."""
         str_return_value = "Unknown"
+        if self.isDebug:
+            _LOGGER.warning("Update Start sn: %s", str(self.serial_number))
 
-        if self.controller.re_auth:
+        auth_data = await self.controller.auth()
+        if auth_data:
+            await self.controller.async_fetch_data()
             my_controller = self.current_controller_info
             str_return_value = my_controller.state
             self._attributes.update(
                 {
+                    "friendly_name": self.counter_name,
                     "battery_level": my_controller.battery,
                     "condition": my_controller.state,
                     "sn": my_controller.sn,
@@ -386,13 +395,16 @@ class SauresControllerSensor(Entity):
         self._attributes.update({"last_update_time": datetime.datetime.now()})
 
         self._attributes.update(
-            {"next_update_time": datetime.datetime.now() + self.scan_interval}
+            {
+                "next_update_time": datetime.datetime.now()
+                + timedelta(minutes=self.scan_interval)
+            }
         )
 
         return str_return_value
 
-    def update(self):
-        self._state = self.fetch_state()
+    async def async_update(self):
+        self._state = await self.async_fetch_state()
 
 
 class SauresSwitch(SwitchEntity):
@@ -413,7 +425,7 @@ class SauresSwitch(SwitchEntity):
     ):
         """Initialize the switch."""
 
-        self.controller = controller
+        self.controller: SauresHA = controller
         self.flat_id = flat_id
         self.serial_number = str(sn)
         self.counter_name = counter_name
@@ -422,21 +434,20 @@ class SauresSwitch(SwitchEntity):
         self._attributes = dict()
         self._state = ""
         self.meter_id = meter_id
-        self.scan_interval = SCAN_INTERVAL
+        self.scan_interval = scan_interval
 
-        self.set_scan_interval(hass, scan_interval)
+        self.set_scan_interval(hass, timedelta(minutes=scan_interval))
 
     def set_scan_interval(self, hass: object, scan_interval: timedelta):
         """Update scan interval."""
 
-        def refresh(event_time):
-            """Get the latest data from Transmission."""
-            self.update()
+        async def refresh(event_time):
+            await self.async_update()
 
         if self.isDebug:
             _LOGGER.warning("Scan_interval = %s", str(scan_interval))
 
-        track_time_interval(hass, refresh, scan_interval)
+        async_track_time_interval(hass, refresh, scan_interval)
 
     @property
     def current_meter(self):
@@ -464,18 +475,11 @@ class SauresSwitch(SwitchEntity):
         """Turn the entity on."""
         if self.controller.set_command(self.meter_id, CONF_COMMAND_ACTIVATE):
             self.controller.get_switches(self.flat_id, True)
-            # obj.value = 1
-            # obj.values[0] = 1
-            # self._state = 1
 
     def turn_off(self, **kwargs) -> None:
         """Turn the entity on."""
         if self.controller.set_command(self.meter_id, CONF_COMMAND_DEACTIVATE):
             self.controller.get_switches(self.flat_id, True)
-            # obj = self.current_meter
-            # obj.value = 0
-            # obj.values[0] = 0
-            # self._state = 0
 
     @property
     def is_on(self):
@@ -490,14 +494,15 @@ class SauresSwitch(SwitchEntity):
     def extra_state_attributes(self):
         return self._attributes
 
-    def fetch_state(self):
+    async def async_fetch_state(self):
         """Retrieve latest state."""
         str_return_value = "Unknown"
 
         if self.isDebug:
-            _LOGGER.warning("Update Start")
-
-        if self.controller.re_auth:
+            _LOGGER.warning("Update Start meter_id: %s", str(self.meter_id))
+        auth_data = await self.controller.auth()
+        if auth_data:
+            await self.controller.async_fetch_data()
             meter = self.current_meter
             str_return_value = meter.value
             if meter.type_number == 8:
@@ -557,10 +562,13 @@ class SauresSwitch(SwitchEntity):
         self._attributes.update({"last_update_time": datetime.datetime.now()})
 
         self._attributes.update(
-            {"next_update_time": datetime.datetime.now() + self.scan_interval}
+            {
+                "next_update_time": datetime.datetime.now()
+                + timedelta(minutes=self.scan_interval)
+            }
         )
 
         return str_return_value
 
-    def update(self):
-        self._state = self.fetch_state()
+    async def async_update(self):
+        self._state = await self.async_fetch_state()
