@@ -9,6 +9,9 @@ https://github.com/volshebniks/sauresha/
 """
 
 # Base component constants
+from xmlrpc.client import Boolean
+
+
 NAME = "Saures"
 DOMAIN = "sauresha"
 VERSION = "1.0.0"
@@ -30,6 +33,7 @@ If you have ANY issues with this you need to open an issue here:
 """
 
 # Configuration and options
+CONF_ISDEBUG: Boolean = True
 CONF_DEBUG = "debug"
 CONF_FLATS = "flats"
 CONF_SENSORS = "sensors"

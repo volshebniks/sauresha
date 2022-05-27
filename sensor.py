@@ -2,16 +2,18 @@
 import logging
 from homeassistant.const import CONF_SCAN_INTERVAL
 from datetime import timedelta
+
+from homeassistant.core import HomeAssistant
 from .const import DOMAIN, COORDINATOR
 from .api import SauresHA
 from .entity import SauresControllerSensor, SauresSensor
 
-SCAN_INTERVAL = timedelta(seconds=600)
+SCAN_INTERVAL = timedelta(minutes=10)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
     """Setup sensor platform."""
     my_sensors: list = []
     is_debug = True
