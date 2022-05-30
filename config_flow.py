@@ -27,6 +27,32 @@ class SaureshaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Init config flow."""
         self._errors = {}
 
+    async def async_step_import(self, platform_config):
+        if platform_config is None:
+            return self.async_abort(reason="unknown_error")
+
+        await self.async_set_unique_id(platform_config[CONF_EMAIL])
+        self._abort_if_unique_id_configured()
+
+        # if self._async_current_entries():
+        # return self.async_abort(reason="no_mixed_config")
+
+        email = platform_config[CONF_EMAIL]
+        password = platform_config[CONF_PASSWORD]
+        flat_ids = platform_config[CONF_FLATS]
+        user_input = {
+            CONF_EMAIL: email,
+            CONF_PASSWORD: password,
+            CONF_SCAN_INTERVAL: 30,
+        }
+        user_options = {
+            CONF_FLATS: str(flat_ids).split(","),
+        }
+        cur_entry = self.async_create_entry(
+            title=platform_config[CONF_EMAIL], data=user_input, options=user_options
+        )
+        return cur_entry
+
     async def async_step_user(self, user_input=None):
 
         self._errors = {}
@@ -43,7 +69,7 @@ class SaureshaConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass, user_input[CONF_EMAIL], user_input[CONF_PASSWORD], "true", ""
             )
 
-            res = await SauresAPI.auth(self.hass)
+            res = await SauresAPI.auth()
             if not res:
                 self._errors["base"] = "cannot_connect"
 
@@ -92,6 +118,7 @@ class SaureshaConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class SaureshaOptionsFlowHandler(OptionsFlow):
     def __init__(self, entry: ConfigEntry):
+
         self._entry = dict(entry.options)
         self._data = dict(entry.data)
         self._errors = {}
@@ -100,11 +127,13 @@ class SaureshaOptionsFlowHandler(OptionsFlow):
         self._errors = {}
 
         if user_input is not None:
-            return self.async_create_entry(title=self._data["email"], data=user_input)
+            return self.async_create_entry(
+                title=self._data[CONF_EMAIL], data=user_input
+            )
 
         try:
             SauresAPI: SauresHA = SauresHA(
-                self.hass, self._data["email"], self._data[CONF_PASSWORD], "true", ""
+                self.hass, self._data[CONF_EMAIL], self._data[CONF_PASSWORD], "true", ""
             )
             res = await SauresAPI.async_get_flats(self.hass)
             if not res:

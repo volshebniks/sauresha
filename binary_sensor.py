@@ -10,7 +10,15 @@ from .entity import SauresBinarySensor
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(minutes=60)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Setup the sensor platform."""
+    _LOGGER.exception(
+        "The sauresha platform for the binary sensor integration does not support YAML platform setup. Please remove it from your config"
+    )
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):

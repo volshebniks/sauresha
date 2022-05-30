@@ -8,9 +8,17 @@ from .const import DOMAIN, COORDINATOR
 from .api import SauresHA
 from .entity import SauresControllerSensor, SauresSensor
 
-SCAN_INTERVAL = timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(minutes=60)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Setup the sensor platform."""
+    _LOGGER.exception(
+        "The sauresha platform for the sensor integration does not support YAML platform setup. Please remove it from your config"
+    )
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
@@ -18,7 +26,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
     my_sensors: list = []
     is_debug = True
     scan_interval = config_entry.data.get(CONF_SCAN_INTERVAL)
-
     controller: SauresHA = hass.data[DOMAIN].get(COORDINATOR)
     for curflat in controller.flats:
         try:

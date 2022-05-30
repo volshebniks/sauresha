@@ -36,6 +36,7 @@ If you have ANY issues with this you need to open an issue here:
 CONF_ISDEBUG: Boolean = True
 CONF_DEBUG = "debug"
 CONF_FLATS = "flats"
+CONF_FLAT_ID = "flat_id"
 CONF_SENSORS = "sensors"
 CONF_BINARY_SENSORS_DEF = [9]
 CONF_SWITCH_DEF = [6]
