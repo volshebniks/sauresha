@@ -1,5 +1,6 @@
 import voluptuous as vol
 import logging
+import uuid
 from homeassistant.config_entries import (
     ConfigFlow,
     ConfigEntry,
@@ -121,6 +122,7 @@ class SaureshaOptionsFlowHandler(OptionsFlow):
 
         self._entry = dict(entry.options)
         self._data = dict(entry.data)
+        self._data["unique_id"] = str(uuid.uuid4())
         self._errors = {}
 
     async def async_step_init(self, user_input=None):

@@ -2,9 +2,9 @@
 import logging
 import time
 import datetime
-import requests
 import functools
-import async_timeout
+import asyncio
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .classes import SauresController, SauresSensor
 from .const import CONF_BINARY_SENSORS_DEF, CONF_SWITCH_DEF
 
@@ -15,20 +15,20 @@ class SauresHA:
     _sid: str
     _debug: bool
     _last_login_time: time
-    _last_getsensors_time: time
     _binarysensors: dict
     _sensors: dict
     _switches: dict
     _data: dict
     _flats: list
+    _hass: object
+    _update_lock: bool
 
-    def __init__(self, email, password, is_debug, userflats):
-        self.__session = requests.Session()
+    def __init__(self, hass, email, password, is_debug, userflats):
         self._email = email
         self._password = password
         self._debug = is_debug
         self._last_login_time = datetime.datetime(2000, 1, 1, 1, 1, 1)
-        self._last_getsensors_time_dict = {}
+        self._last_update_time_dict = {}
         self._data = dict()
         self._sensors = dict()
         self._controllers = dict()
@@ -36,6 +36,8 @@ class SauresHA:
         self._switches = dict()
         self._flats = list()
         self.userflats = userflats
+        self._hass = hass
+        self._update_lock = False
 
     def checkflatsfilter(self, filter_flats, flat_id):
         if len(filter_flats) == 0:
@@ -51,37 +53,27 @@ class SauresHA:
 
     @property
     def flats(self):
-        return self.get_flats()
+        return self._flats
 
-    @property
-    def controllers(self):
-        return self.get_controllers
-
-    @property
-    def sensors(self):
-        return self.get_sensors
-
-    @property
-    def binary_sensors(self):
-        return self.get_binary_sensors
-
-    @property
-    def re_auth(self):
+    async def auth(self) -> bool:
         bln_return = False
         try:
             now = datetime.datetime.now()
             period = now - self._last_login_time
             if (period.total_seconds() / 60) > 5:
+                clientsession = async_get_clientsession(self._hass)
                 self._last_login_time = datetime.datetime.now()
-                auth_data = self.__session.post(
+                auth_data = await clientsession.post(
                     "https://api.saures.ru/login",
                     data={"email": self._email, "password": self._password},
-                ).json()
-                if not auth_data:
+                )
+                result = await auth_data.json()
+                if not result:
                     raise Exception("Invalid credentials")
-                self._sid = auth_data["data"]["sid"]
-                bln_return = auth_data["status"] != "bad"
-
+                if len(result["errors"]) > 0:
+                    raise Exception(result["errors"][0]["msg"])
+                self._sid = result["data"]["sid"]
+                bln_return = result["status"] != "bad"
             else:
                 if self._sid == "":
                     bln_return = False
@@ -89,36 +81,34 @@ class SauresHA:
                     bln_return = True
 
         except Exception as e:  # catch *all* exceptions
-            if self._debug:
-                _LOGGER.warning(str(e))
+            _LOGGER.error(str(e))
 
         return bln_return
 
-    def get_flats(self):
-        flats = ""
+    async def async_get_flats(self, hass):
+        self._flats = dict()
+        clientsession = async_get_clientsession(hass)
         if len(self.userflats) == 0:
             try:
-                if self.re_auth:
-                    flats = self.__session.get(
+                lock = asyncio.Lock()
+                async with lock:
+                    auth_data = await self.auth()
+                if auth_data:
+                    flats_data = await clientsession.get(
                         "https://api.saures.ru/1.0/user/objects",
                         params={"sid": self._sid},
-                    ).json()["data"]["objects"]
+                    )
+
+                    result = await flats_data.json()
+                    result_data = result["data"]["objects"]
                     self._flats.clear()
-                    for val in flats:
-                        self._flats.append(val.get("id"))
-                        _LOGGER.warning(
-                            "ID flat: %s : %s",
-                            str(val.get("house")),
-                            str(val.get("id")),
-                        )
+                    for val in result_data:
+                        self._flats[val.get("id")] = str(val.get("label"))
             except Exception as e:
                 if self._debug:
-                    _LOGGER.warning(str(e))
+                    _LOGGER.error(str(e))
         else:
-            filter_flats = str(self.userflats).split(",")
-            self._flats.clear()
-            for val in filter_flats:
-                self._flats.append(int(val))
+            self._flats = self.userflats
 
         return self._flats
 
@@ -131,61 +121,71 @@ class SauresHA:
                 pass
         return False
 
-    def set_command(self, meter_id, command_text):
+    async def set_command(self, meter_id, command_text):
         bln_return = False
         try:
-            if self.re_auth:
+            clientsession = async_get_clientsession(self._hass)
+            lock = asyncio.Lock()
+            async with lock:
+                auth_data = await self.auth()
+            if auth_data:
                 self._last_login_time = datetime.datetime.now()
-                res_data = self.__session.post(
+                res_data = await clientsession.post(
                     "https://api.saures.ru/1.0/meter/control",
                     data={"sid": self._sid, "id": meter_id, "command": command_text},
-                ).json()
-                if not res_data:
+                )
+                result = res_data.json()
+                if not result:
                     raise Exception("Ошибка выполнения комманды.")
 
-                bln_return = res_data["status"] != "bad"
+                bln_return = result["status"] != "bad"
                 if not bln_return:
                     msg = f'Ошибка выполнения комманды -  command: {command_text} ,meter_id: {meter_id}, ошибка: {res_data["errors"][0]["msg"]}.'
                     _LOGGER.error(msg)
 
         except Exception as e:  # catch *all* exceptions
             if self._debug:
-                _LOGGER.warning(str(e))
+                _LOGGER.error(str(e))
 
         return bln_return
 
-    def get_data(self, flat_id, reload=False):
+    async def async_get_data(self, flat_id, reload=False):
         now = datetime.datetime.now()
-        if not self.checkdict(self._last_getsensors_time_dict, flat_id):
-            self._last_getsensors_time_dict[flat_id] = datetime.datetime(
+        if not self.checkdict(self._last_update_time_dict, flat_id):
+            self._last_update_time_dict[flat_id] = datetime.datetime(
                 2000, 1, 1, 1, 1, 1
             )
-        period = now - self._last_getsensors_time_dict[flat_id]
+        period = now - self._last_update_time_dict[flat_id]
         if (period.total_seconds() / 60) > 5 or reload:
-            self._last_getsensors_time_dict[flat_id] = datetime.datetime.now()
-            try:
-                if self.re_auth:
-                    controllers = self.__session.get(
+            self._last_update_time_dict[flat_id] = datetime.datetime.now()
+            lock = asyncio.Lock()
+            async with lock:
+                auth_data = await self.auth()
+            if auth_data:
+                try:
+                    clientsession = async_get_clientsession(self._hass)
+                    controllers = await clientsession.get(
                         "https://api.saures.ru/1.0/object/meters",
                         params={"id": str(flat_id), "sid": self._sid},
-                    ).json()["data"]["sensors"]
-                    self._data[flat_id] = controllers
-            except Exception as e:
-                if self._debug:
-                    _LOGGER.warning(str(e))
+                    )
+                    data = await controllers.json()
+                    self._data[flat_id] = data["data"]["sensors"]
+                except Exception as e:
+                    _LOGGER.error(e)
 
+        self._update_lock = False
         return self._data[flat_id]
 
-    def get_controllers(self, flat_id):
-        controllers = self.get_data(flat_id)
+    async def async_get_controllers(self, flat_id):
+        lock = asyncio.Lock()
+        async with lock:
+            controllers = await self.async_get_data(flat_id)
+
         self._controllers[flat_id] = controllers
         return self._controllers[flat_id]
 
     def get_controller(self, flat_id, sn):
-        if not self.checkdict(self._last_getsensors_time_dict, flat_id):
-            controllers = self.get_controllers(flat_id)
-        else:
-            controllers = self._controllers[flat_id]
+        controllers = self._controllers[flat_id]
         return next(
             (
                 SauresController(controller)
@@ -195,9 +195,11 @@ class SauresHA:
             SauresController(dict()),
         )
 
-    def get_binary_sensors(self, flat_id):
+    async def async_get_binary_sensors(self, flat_id):
         results = list()
-        meters = self.get_data(flat_id)
+        lock = asyncio.Lock()
+        async with lock:
+            meters = await self.async_get_data(flat_id)
         res = functools.reduce(
             list.__add__, map(lambda sensor: sensor["meters"], meters)
         )
@@ -210,9 +212,12 @@ class SauresHA:
 
         return self._binarysensors[flat_id]
 
-    def get_sensors(self, flat_id):
+    async def async_get_sensors(self, flat_id):
         results = list()
-        meters = self.get_data(flat_id)
+        lock = asyncio.Lock()
+        async with lock:
+            meters = await self.async_get_data(flat_id)
+
         res = functools.reduce(
             list.__add__, map(lambda sensor: sensor["meters"], meters)
         )
@@ -245,9 +250,11 @@ class SauresHA:
 
         return SauresSensor(dict())
 
-    def get_switches(self, flat_id, reload):
+    async def async_get_switches(self, flat_id, reload):
         results = list()
-        meters = self.get_data(flat_id, reload)
+        lock = asyncio.Lock()
+        async with lock:
+            meters = await self.async_get_data(flat_id)
         res = functools.reduce(
             list.__add__, map(lambda sensor: sensor["meters"], meters)
         )
@@ -266,17 +273,18 @@ class SauresHA:
                     return SauresSensor(obj)
         return SauresSensor(dict())
 
-    def fetch_data(self):
-        flats = self.get_flats()
-        for curflat in flats:
-            self.get_controllers(curflat)
-            self.get_sensors(curflat)
-            self.get_binary_sensors(curflat)
-            self.get_switches(curflat, False)
-
-    async def _async_update_data(self):
+    async def async_fetch_data(self):
         try:
-            async with async_timeout.timeout(10):
-                return self.fetch_data()
-        except Exception as e:
-            _LOGGER.error(str(e))
+            lock = asyncio.Lock()
+            async with lock:
+                auth_data = await self.auth()
+            if auth_data:
+                flats = await self.async_get_flats(self._hass)
+                self._flats = flats
+                for curflat in flats:
+                    await self.async_get_controllers(curflat)
+                    await self.async_get_sensors(curflat)
+                    await self.async_get_binary_sensors(curflat)
+                    await self.async_get_switches(curflat, False)
+        except Exception:
+            _LOGGER.exception("Error load data")
