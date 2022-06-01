@@ -58,10 +58,10 @@ class SaureshaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._errors = {}
 
-        if self._async_current_entries():
-            return self.async_abort(reason="no_mixed_config")
-        if self.hass.data.get(DOMAIN):
-            return self.async_abort(reason="no_mixed_config")
+        # if self._async_current_entries():
+        # return self.async_abort(reason="no_mixed_config")
+        # if self.hass.data.get(DOMAIN):
+        # return self.async_abort(reason="no_mixed_config")
 
         if user_input is not None:
 
