@@ -94,76 +94,81 @@ class SauresSensor(Entity):
         if self.isDebug:
             _LOGGER.warning("Update Start meter_id: %s", str(self.meter_id))
 
-        lock = asyncio.Lock()
-        async with lock:
-            await self.controller.async_fetch_data()
+        try:
 
-        meter = self.current_meter
-        str_return_value = meter.value
-        if meter.type_number == 8:
-            self._attributes.update(
-                {
-                    "friendly_name": meter.name,
-                    "condition": meter.state,
-                    "sn": meter.sn,
-                    "type": meter.type,
-                    "meter_id": meter.meter_id,
-                    "input": meter.input,
-                    "approve_dt": meter.approve_dt,
-                    "t1": meter.t1,
-                    "t2": meter.t2,
-                    "t3": meter.t3,
-                    "t4": meter.t4,
-                }
-            )
-        else:
-            self._attributes.update(
-                {
-                    "friendly_name": meter.name,
-                    "condition": meter.state,
-                    "sn": meter.sn,
-                    "type": meter.type,
-                    "meter_id": meter.meter_id,
-                    "input": meter.input,
-                    "approve_dt": meter.approve_dt,
-                }
-            )
-        if self.isStart:
-            if meter.type_number == 1 or meter.type_number == 2:
-                self._attributes.update(
-                    {"unit_of_measurement": "m³", "state_class": "total_increasing"}
-                )
-            elif meter.type_number == 3:
+            lock = asyncio.Lock()
+            async with lock:
+                await self.controller.async_fetch_data()
+
+            meter = self.current_meter
+            str_return_value = meter.value
+            if meter.type_number == 8:
                 self._attributes.update(
                     {
-                        "unit_of_measurement": "m³",
-                        "device_class": "gas",
-                        "state_class": "total_increasing",
+                        "friendly_name": meter.name,
+                        "condition": meter.state,
+                        "sn": meter.sn,
+                        "type": meter.type,
+                        "meter_id": meter.meter_id,
+                        "input": meter.input,
+                        "approve_dt": meter.approve_dt,
+                        "t1": meter.t1,
+                        "t2": meter.t2,
+                        "t3": meter.t3,
+                        "t4": meter.t4,
                     }
                 )
-            elif meter.type_number == 5:
-                self._attributes.update({"unit_of_measurement": "°C"})
-            elif meter.type_number == 8:
+            else:
                 self._attributes.update(
                     {
-                        "unit_of_measurement": "kWh",
-                        "device_class": "energy",
-                        "state_class": "total_increasing",
+                        "friendly_name": meter.name,
+                        "condition": meter.state,
+                        "sn": meter.sn,
+                        "type": meter.type,
+                        "meter_id": meter.meter_id,
+                        "input": meter.input,
+                        "approve_dt": meter.approve_dt,
                     }
                 )
+            if self.isStart:
+                if meter.type_number == 1 or meter.type_number == 2:
+                    self._attributes.update(
+                        {"unit_of_measurement": "m³", "state_class": "total_increasing"}
+                    )
+                elif meter.type_number == 3:
+                    self._attributes.update(
+                        {
+                            "unit_of_measurement": "m³",
+                            "device_class": "gas",
+                            "state_class": "total_increasing",
+                        }
+                    )
+                elif meter.type_number == 5:
+                    self._attributes.update({"unit_of_measurement": "°C"})
+                elif meter.type_number == 8:
+                    self._attributes.update(
+                        {
+                            "unit_of_measurement": "kWh",
+                            "device_class": "energy",
+                            "state_class": "total_increasing",
+                        }
+                    )
 
-            self.isStart = False
+                self.isStart = False
 
-        self._attributes.update({"last_update_time": datetime.datetime.now()})
+            self._attributes.update({"last_update_time": datetime.datetime.now()})
 
-        self._attributes.update(
-            {
-                "next_update_time": datetime.datetime.now()
-                + timedelta(minutes=self.scan_interval)
-            }
-        )
-        if self.isDebug:
-            _LOGGER.warning("Update Finish meter_id: %s", str(self.meter_id))
+            self._attributes.update(
+                {
+                    "next_update_time": datetime.datetime.now()
+                    + timedelta(minutes=self.scan_interval)
+                }
+            )
+            if self.isDebug:
+                _LOGGER.warning("Update Finish meter_id: %s", str(self.meter_id))
+
+        except Exception as e:
+            _LOGGER.error(e)
 
         return str_return_value
 
@@ -198,6 +203,7 @@ class SauresBinarySensor(Entity):
         self.scan_interval = scan_interval
 
         self._unique_id = slugify(f"sauresha_{flat_id}_{meter_id}")
+
         self.set_scan_interval(hass, timedelta(minutes=self.scan_interval))
 
     def set_scan_interval(self, hass: object, scan_interval: timedelta):
@@ -331,6 +337,19 @@ class SauresControllerSensor(Entity):
 
         self._unique_id = slugify(f"sauresha_{flat_id}_{sn}")
 
+        self.set_scan_interval(hass, timedelta(minutes=scan_interval))
+
+    def set_scan_interval(self, hass: object, scan_interval: timedelta):
+        """Update scan interval."""
+
+        async def refresh(event_time):
+            await self.async_update()
+
+        if self.isDebug:
+            _LOGGER.warning("Scan_interval = %s", str(scan_interval))
+
+        async_track_time_interval(hass, refresh, scan_interval)
+
     @property
     def current_controller_info(self):
         return self.controller.get_controller(self.flat_id, self.serial_number)
@@ -359,17 +378,6 @@ class SauresControllerSensor(Entity):
     @property
     def extra_state_attributes(self):
         return self._attributes
-
-    async def async_set_scan_interval(self, hass: object, scan_interval: timedelta):
-        """Update scan interval."""
-
-        async def refresh(event_time):
-            await self.async_update()
-
-        if self.isDebug:
-            _LOGGER.warning("Scan_interval = %s", str(scan_interval))
-
-        async_track_time_interval(hass, refresh, timedelta(minutes=scan_interval))
 
     async def async_fetch_state(self):
         """Retrieve latest state."""
