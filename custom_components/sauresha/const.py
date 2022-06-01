@@ -9,6 +9,9 @@ https://github.com/volshebniks/sauresha/
 """
 
 # Base component constants
+from xmlrpc.client import Boolean
+
+
 NAME = "Saures"
 DOMAIN = "sauresha"
 VERSION = "1.0.0"
@@ -16,6 +19,7 @@ ATTRIBUTION = "Home assistant component for Saures"
 ISSUE_URL = "https://github.com/volshebniks/sauresha/issues"
 
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
+
 DOMAIN = "sauresha"
 
 STARTUP_MESSAGE = f"""
@@ -29,8 +33,10 @@ If you have ANY issues with this you need to open an issue here:
 """
 
 # Configuration and options
+CONF_ISDEBUG: Boolean = True
 CONF_DEBUG = "debug"
 CONF_FLATS = "flats"
+CONF_FLAT_ID = "flat_id"
 CONF_SENSORS = "sensors"
 CONF_BINARY_SENSORS_DEF = [9]
 CONF_SWITCH_DEF = [6]
