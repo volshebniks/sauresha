@@ -36,6 +36,11 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         if not user_cfg:
             continue
 
+        if not user_cfg.get(CONF_EMAIL):
+            continue
+        if not user_cfg.get(CONF_PASSWORD):
+            continue
+            
         yaml_email: str = user_cfg[CONF_EMAIL]
         yaml_password: str = user_cfg[CONF_PASSWORD]
         yaml_flatid = user_cfg[CONF_FLAT_ID]
