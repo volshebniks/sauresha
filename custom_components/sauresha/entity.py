@@ -69,10 +69,9 @@ class SauresSensor(Entity):
 
     @property
     def name(self):
-        """Return the entity_id of the sensor."""
         if not self.counter_name:
             self.counter_name = ""
-        return self.counter_name
+        return f"[SAURES] {self.counter_name}"
 
     @property
     def state(self):
@@ -200,6 +199,7 @@ class SauresBinarySensor(Entity):
         self._attributes = dict()
         self.isDebug = is_debug
         self._state = False
+        self.isStart = True
         self.scan_interval = scan_interval
 
         self._unique_id = slugify(f"sauresha_{flat_id}_{meter_id}")
@@ -224,24 +224,18 @@ class SauresBinarySensor(Entity):
     @property
     def unique_id(self):
         """Return a unique ID to use for this sensor."""
-        return self._unique_id
+        return f"sauresha_{self.flat_id}_{self.meter_id}"
 
     @property
-    def entity_id(self):
+    def current_meter(self):
+        return self.controller.get_sensor(self.flat_id, self.meter_id)
+
+    @property
+    def name(self):
         """Return the entity_id of the sensor."""
         if not self.counter_name:
             self.counter_name = ""
-
-        if len(self.counter_name) > 0:
-            final_name = slugify(f"{self.counter_name}")
-        elif len(self.serial_number) > 0:
-            final_name = slugify(f"{self.flat_id}_{self.serial_number}")
-        else:
-            final_name = slugify(f"{self.flat_id}_{self.meter_id}")
-        sn = final_name.replace("-", "_")
-        reg = re.compile("[^a-zA-Z0-9_]")
-        sn = reg.sub("", sn).lower()
-        return f"binary_sensor.sauresha_{sn}"
+        return f"[SAURES] {self.counter_name}"
 
     @property
     def is_on(self):
@@ -292,6 +286,15 @@ class SauresBinarySensor(Entity):
                 return_value = True
         else:
             _LOGGER.error("API ERROR during Auth process")
+
+        if self.isStart:
+            if meter.type_number == 10:
+                self._attributes.update(
+                    {
+                        "device_class": "opening",
+                    }
+                )
+            self.isStart = False
 
         self._attributes.update({"last_update_time": datetime.datetime.now()})
 
@@ -364,7 +367,7 @@ class SauresControllerSensor(Entity):
         """Return the entity_id of the sensor."""
         if not self.counter_name:
             self.counter_name = ""
-        return self.counter_name
+        return f"[SAURES] {self.counter_name}"
 
     @property
     def state(self):
@@ -373,7 +376,7 @@ class SauresControllerSensor(Entity):
 
     @property
     def icon(self):
-        return "mdi:xbox-controller-view"
+        return "mdi:home-circle"
 
     @property
     def extra_state_attributes(self):
@@ -484,22 +487,11 @@ class SauresSwitch(SwitchEntity):
         return self._unique_id
 
     @property
-    def entity_id(self):
+    def name(self):
         """Return the entity_id of the sensor."""
         if not self.counter_name:
             self.counter_name = ""
-
-        if len(self.counter_name) > 0:
-            final_name = slugify(f"{self.counter_name}")
-        elif len(self.serial_number) > 0:
-            final_name = slugify(f"{self.flat_id}_{self.serial_number}")
-        else:
-            final_name = slugify(f"{self.flat_id}_{self.meter_id}")
-
-        sn = final_name.replace("-", "_")
-        reg = re.compile("[^a-zA-Z0-9_]")
-        sn = reg.sub("", sn).lower()
-        return f"switch.sauresha_{sn}"
+        return f"[SAURES] {self.counter_name}"
 
     def turn_on(self, **kwargs) -> None:
         """Turn the entity on."""

@@ -103,7 +103,9 @@ class SauresHA:
                     result_data = result["data"]["objects"]
                     self._flats.clear()
                     for val in result_data:
-                        self._flats[val.get("id")] = str(val.get("label"))
+                        self._flats[
+                            val.get("id")
+                        ] = f"{val.get('label')}:{val.get('house')}:{val.get('number')}"
             except Exception as e:
                 if self._debug:
                     _LOGGER.error(str(e))
