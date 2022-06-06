@@ -35,6 +35,10 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     for user_cfg in domain_config:
         if not user_cfg:
             continue
+        if not user_cfg.get(CONF_EMAIL):
+            continue
+        if not user_cfg.get(CONF_PASSWORD):
+            continue
 
         if not user_cfg.get(CONF_EMAIL):
             continue
