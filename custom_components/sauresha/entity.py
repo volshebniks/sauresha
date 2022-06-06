@@ -70,7 +70,7 @@ class SauresSensor(Entity):
     @property
     def name(self):
         if not self.counter_name:
-            self.counter_name = ""
+            self.counter_name = f" [{self.flat_id}] [{self.meter_id}]"
         return f"[SAURES] {self.counter_name}"
 
     @property
@@ -234,7 +234,7 @@ class SauresBinarySensor(Entity):
     def name(self):
         """Return the entity_id of the sensor."""
         if not self.counter_name:
-            self.counter_name = ""
+            self.counter_name = f" [{self.flat_id}] [{self.meter_id}]"
         return f"[SAURES] {self.counter_name}"
 
     @property
@@ -366,7 +366,7 @@ class SauresControllerSensor(Entity):
     def name(self):
         """Return the entity_id of the sensor."""
         if not self.counter_name:
-            self.counter_name = ""
+            self.counter_name = f" [{self.flat_id}] [{self.serial_number}]"
         return f"[SAURES] {self.counter_name}"
 
     @property
@@ -490,7 +490,7 @@ class SauresSwitch(SwitchEntity):
     def name(self):
         """Return the entity_id of the sensor."""
         if not self.counter_name:
-            self.counter_name = ""
+            self.counter_name = f" [{self.flat_id}] [{self.meter_id}]"
         return f"[SAURES] {self.counter_name}"
 
     def turn_on(self, **kwargs) -> None:
