@@ -1,6 +1,5 @@
 import logging
 import datetime
-import re
 import asyncio
 from datetime import timedelta
 from homeassistant.helpers.entity import Entity
@@ -493,15 +492,19 @@ class SauresSwitch(SwitchEntity):
             self.counter_name = f" [{self.flat_id}] [{self.meter_id}]"
         return f"[SAURES] {self.counter_name}"
 
-    def turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
-        if self.controller.set_command(self.meter_id, CONF_COMMAND_ACTIVATE):
-            self.controller.get_switches(self.flat_id, True)
+        result = await self.controller.set_command(self.meter_id, CONF_COMMAND_ACTIVATE)
+        if result:
+            await self.controller.async_get_switches(self.flat_id, True)
 
-    def turn_off(self, **kwargs) -> None:
-        """Turn the entity on."""
-        if self.controller.set_command(self.meter_id, CONF_COMMAND_DEACTIVATE):
-            self.controller.get_switches(self.flat_id, True)
+    async def async_turn_off(self, **kwargs) -> None:
+        """Turn the entity off."""
+        result = await self.controller.set_command(
+            self.meter_id, CONF_COMMAND_DEACTIVATE
+        )
+        if result:
+            await self.controller.async_get_switchess(self.flat_id, True)
 
     @property
     def is_on(self):

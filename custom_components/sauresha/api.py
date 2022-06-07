@@ -136,14 +136,14 @@ class SauresHA:
                     "https://api.saures.ru/1.0/meter/control",
                     data={"sid": self._sid, "id": meter_id, "command": command_text},
                 )
-                result = res_data.json()
+                result = await res_data.json()
                 if not result:
                     raise Exception("Ошибка выполнения комманды.")
 
                 bln_return = result["status"] != "bad"
                 if not bln_return:
-                    msg = f'Ошибка выполнения комманды -  command: {command_text} ,meter_id: {meter_id}, ошибка: {res_data["errors"][0]["msg"]}.'
-                    _LOGGER.error(msg)
+                    msg = f'Ошибка выполнения комманды -  command: {command_text} ,meter_id: {meter_id}, ошибка: {result["errors"][0]["msg"]}.'
+                    _LOGGER.warning(msg)
 
         except Exception as e:  # catch *all* exceptions
             if self._debug:
@@ -173,7 +173,8 @@ class SauresHA:
                     data = await controllers.json()
                     self._data[flat_id] = data["data"]["sensors"]
                 except Exception as e:
-                    _LOGGER.error(e)
+                    if self._debug:
+                        _LOGGER.error(str(e))
 
         self._update_lock = False
         return self._data[flat_id]
