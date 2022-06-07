@@ -169,7 +169,7 @@ class SauresHA:
                 bln_return = result["status"] != "bad"
                 if not bln_return:
                     msg = f'Ошибка выполнения комманды -  command: {command_text} ,meter_id: {meter_id}, ошибка: {result["errors"][0]["msg"]}.'
-                    _LOGGER.error(msg)
+                    _LOGGER.warning(msg)
 
         except Exception as e:  # catch *all* exceptions
             if self._debug:
