@@ -2,13 +2,14 @@ import logging
 import datetime
 import asyncio
 from datetime import timedelta
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, DeviceInfo
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
+from homeassistant.const import ATTR_BATTERY_LEVEL
 
 from .api import SauresHA
-from .const import CONF_COMMAND_ACTIVATE, CONF_COMMAND_DEACTIVATE
+from .const import CONF_COMMAND_ACTIVATE, CONF_COMMAND_DEACTIVATE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -357,6 +358,27 @@ class SauresControllerSensor(Entity):
         return self.controller.get_controller(self.flat_id, self.serial_number)
 
     @property
+    def device_info(self) -> DeviceInfo:
+        """Return a description for device registry."""
+        my_controller = self.current_controller_info
+        info = DeviceInfo(
+            identifiers={
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self.unique_id)
+            },
+            name=self.name,
+            manufacturer="SAURES",
+            model=self.controller.get_controller_name(my_controller.hardware),
+            sw_version=my_controller.firmware,
+            via_device=(
+                DOMAIN,
+                f"[{self.controller.get_controller_name(my_controller.hardware)}]:[{self.serial_number}]",
+            ),
+        )
+
+        return info
+
+    @property
     def unique_id(self):
         """Return the entity_id of the sensor."""
         return f"sauresha_contr_{self.flat_id}_{self.serial_number}"
@@ -396,7 +418,7 @@ class SauresControllerSensor(Entity):
         self._attributes.update(
             {
                 "friendly_name": self.counter_name,
-                "battery_level": my_controller.battery,
+                ATTR_BATTERY_LEVEL: my_controller.battery,
                 "condition": my_controller.state,
                 "sn": my_controller.sn,
                 "local_ip": my_controller.local_ip,
