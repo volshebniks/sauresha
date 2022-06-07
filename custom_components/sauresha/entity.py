@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
 
@@ -256,9 +257,9 @@ class SauresBinarySensor(Entity):
     @property
     def device_class(self):
         if self.object_type in CONF_BINARY_SENSOR_DEV_CLASS_MOISTURE_DEF:
-            self.device_class = "moisture"
+            self.device_class = BinarySensorDeviceClass.MOISTURE
         elif self.object_type in CONF_BINARY_SENSOR_DEV_CLASS_OPENING_DEF:
-            self.device_class = "opening"
+            self.device_class = BinarySensorDeviceClass.OPENING
         else:
             self.device_class = "None"
         return self.device_class
