@@ -4,14 +4,12 @@ import asyncio
 from datetime import timedelta
 from homeassistant.helpers.entity import Entity, DeviceInfo
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
 from homeassistant.const import ATTR_BATTERY_LEVEL
 
 from .api import SauresHA
-<<<<<<< Updated upstream
-from .const import CONF_COMMAND_ACTIVATE, CONF_COMMAND_DEACTIVATE, DOMAIN
-=======
 from .const import (
     CONF_COMMAND_ACTIVATE,
     CONF_COMMAND_DEACTIVATE,
@@ -19,8 +17,6 @@ from .const import (
     CONF_BINARY_SENSOR_DEV_CLASS_MOISTURE_DEF,
     CONF_BINARY_SENSOR_DEV_CLASS_OPENING_DEF,
 )
->>>>>>> Stashed changes
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -193,6 +189,7 @@ class SauresBinarySensor(Entity):
         hass,
         controller,
         flat_id,
+        object_type,
         meter_id,
         serial_number,
         counter_name,
@@ -203,6 +200,7 @@ class SauresBinarySensor(Entity):
 
         self.controller: SauresHA = controller
         self.flat_id = flat_id
+        self.object_type = object_type
         self.meter_id = meter_id
         self.serial_number = serial_number
         self.counter_name = counter_name
@@ -263,8 +261,13 @@ class SauresBinarySensor(Entity):
         return self._state is not None
 
     @property
-    def icon(self):
-        return "mdi:alarm-check"
+    def device_class(self):
+        if self.object_type in CONF_BINARY_SENSOR_DEV_CLASS_MOISTURE_DEF:
+            return BinarySensorDeviceClass.MOISTURE
+        elif self.object_type in CONF_BINARY_SENSOR_DEV_CLASS_OPENING_DEF:
+            return BinarySensorDeviceClass.OPENING
+        else:
+            return "None"
 
     @property
     def extra_state_attributes(self):
