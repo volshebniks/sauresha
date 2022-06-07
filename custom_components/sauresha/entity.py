@@ -8,7 +8,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
 
 from .api import SauresHA
-from .const import CONF_COMMAND_ACTIVATE, CONF_COMMAND_DEACTIVATE
+from .const import CONF_COMMAND_ACTIVATE, CONF_COMMAND_DEACTIVATE, CONF_BINARY_SENSOR_DEV_CLASS_MOISTURE_DEF, CONF_BINARY_SENSOR_DEV_CLASS_OPENING_DEF
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -182,6 +182,7 @@ class SauresBinarySensor(Entity):
         hass,
         controller,
         flat_id,
+        object_type,
         meter_id,
         serial_number,
         counter_name,
@@ -192,6 +193,7 @@ class SauresBinarySensor(Entity):
 
         self.controller: SauresHA = controller
         self.flat_id = flat_id
+        self.object_type = object_type
         self.meter_id = meter_id
         self.serial_number = serial_number
         self.counter_name = counter_name
@@ -250,6 +252,16 @@ class SauresBinarySensor(Entity):
     def available(self):
         """Return true if the binary sensor is available."""
         return self._state is not None
+
+    @property
+    def device_class(self):
+        if self.object_type in CONF_BINARY_SENSOR_DEV_CLASS_MOISTURE_DEF:
+            self.device_class = "moisture"
+        elif self.object_type in CONF_BINARY_SENSOR_DEV_CLASS_OPENING_DEF:
+            self.device_class = "opening"
+        else:
+            self.device_class = "None"
+        return self.device_class
 
     @property
     def icon(self):
