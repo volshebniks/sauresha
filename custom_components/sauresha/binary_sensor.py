@@ -36,6 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
                     hass,
                     controller,
                     curflat,
+                    curSensor.get("type", {}).get("number"),
                     curSensor.get("meter_id"),
                     curSensor.get("sn"),
                     curSensor.get("meter_name"),
