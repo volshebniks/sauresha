@@ -10,8 +10,13 @@ from homeassistant.util import slugify
 from homeassistant.const import ATTR_BATTERY_LEVEL
 
 from .api import SauresHA
-from .const import CONF_COMMAND_ACTIVATE, CONF_COMMAND_DEACTIVATE, DOMAIN, CONF_BINARY_SENSOR_DEV_CLASS_MOISTURE_DEF, CONF_BINARY_SENSOR_DEV_CLASS_OPENING_DEF
-
+from .const import (
+    CONF_COMMAND_ACTIVATE,
+    CONF_COMMAND_DEACTIVATE,
+    DOMAIN,
+    CONF_BINARY_SENSOR_DEV_CLASS_MOISTURE_DEF,
+    CONF_BINARY_SENSOR_DEV_CLASS_OPENING_DEF,
+)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -436,6 +441,9 @@ class SauresControllerSensor(Entity):
                 "request_dt": my_controller.request_dt,
                 "rssi": my_controller.rssi,
                 "hardware": my_controller.hardware,
+                "hardware_name": self.controller.get_controller_name(
+                    my_controller.hardware
+                ),
                 "new_firmware": my_controller.new_firmware,
                 "last_connection": my_controller.last_connection,
                 "last_connection_warning": my_controller.last_connection_warning,
