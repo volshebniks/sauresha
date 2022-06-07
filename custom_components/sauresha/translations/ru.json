@@ -14,7 +14,7 @@
                   "scan_interval": "пауза между обновлениями (мин)"
               },
               "description": "Ознакомьтесь с инструкциями, если Вам нужна помощь с настройкой:\nhttps://github.com/volshebniks/sauresha",
-              "title": "Ингерация HA c Saures"
+              "title": "Интеграция HA c Saures"
           }
       }
   },
