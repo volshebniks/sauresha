@@ -256,13 +256,7 @@ class SauresBinarySensor(Entity):
 
     @property
     def device_class(self):
-        if self.object_type in CONF_BINARY_SENSOR_DEV_CLASS_MOISTURE_DEF:
-            self.device_class = BinarySensorDeviceClass.MOISTURE
-        elif self.object_type in CONF_BINARY_SENSOR_DEV_CLASS_OPENING_DEF:
-            self.device_class = BinarySensorDeviceClass.OPENING
-        else:
-            self.device_class = "None"
-        return self.device_class
+        return BinarySensorDeviceClass.OPENING
 
     @property
     def icon(self):
