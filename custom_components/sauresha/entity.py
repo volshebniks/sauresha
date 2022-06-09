@@ -17,6 +17,7 @@ from .const import (
     CONF_BINARY_SENSOR_DEV_CLASS_MOISTURE_DEF,
     CONF_BINARY_SENSOR_DEV_CLASS_OPENING_DEF,
 )
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -542,12 +543,15 @@ class SauresSwitch(SwitchEntity):
             self.meter_id, CONF_COMMAND_DEACTIVATE
         )
         if result:
-            await self.controller.async_get_switchess(self.flat_id, True)
+            await self.controller.async_get_switches(self.flat_id, True)
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return bool(int(self._state))
+        if self._state.isnumeric():
+            return bool(int(self._state))
+        else:
+            return False
 
     @property
     def icon(self):
@@ -598,30 +602,6 @@ class SauresSwitch(SwitchEntity):
                     "approve_dt": meter.approve_dt,
                 }
             )
-        if self.isStart:
-            if meter.type_number == 1 or meter.type_number == 2:
-                self._attributes.update(
-                    {"unit_of_measurement": "m³", "state_class": "total_increasing"}
-                )
-            elif meter.type_number == 3:
-                self._attributes.update(
-                    {
-                        "unit_of_measurement": "m³",
-                        "device_class": "gas",
-                        "state_class": "total_increasing",
-                    }
-                )
-            elif meter.type_number == 5:
-                self._attributes.update({"unit_of_measurement": "°C"})
-            elif meter.type_number == 8:
-                self._attributes.update(
-                    {
-                        "unit_of_measurement": "kWh",
-                        "device_class": "energy",
-                        "state_class": "total_increasing",
-                    }
-                )
-
             self.isStart = False
 
         self._attributes.update({"last_update_time": datetime.datetime.now()})
