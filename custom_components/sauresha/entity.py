@@ -139,7 +139,9 @@ class SauresSensor(Entity):
             if self.isStart:
                 if meter.type_number == 1 or meter.type_number == 2:
                     self._attributes.update(
-                        {"unit_of_measurement": "m³", "state_class": "total_increasing"}
+                        {"unit_of_measurement": "m³", 
+                         "device_class": "water",
+                         "state_class": "total_increasing"}
                     )
                 elif meter.type_number == 3:
                     self._attributes.update(
