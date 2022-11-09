@@ -1,3 +1,7 @@
+"""
+Provides entities
+"""
+
 import logging
 import datetime
 import asyncio
@@ -139,7 +143,7 @@ class SauresSensor(Entity):
             if self.isStart:
                 if meter.type_number == 1 or meter.type_number == 2:
                     self._attributes.update(
-                        {"unit_of_measurement": "m³", 
+                        {"unit_of_measurement": "m³",
                          "device_class": "water",
                          "state_class": "total_increasing"}
                     )
@@ -550,7 +554,8 @@ class SauresSwitch(SwitchEntity):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        if self._state.isnumeric():
+        cur_StringValue = str(self._state)
+        if cur_StringValue.isnumeric():
             return bool(int(self._state))
         else:
             return False

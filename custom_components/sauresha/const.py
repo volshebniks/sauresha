@@ -33,7 +33,7 @@ If you have ANY issues with this you need to open an issue here:
 """
 
 # Configuration and options
-CONF_ISDEBUG: Boolean = True
+CONF_ISDEBUG: Boolean = False
 CONF_DEBUG = "debug"
 CONF_FLATS = "flats"
 CONF_FLAT_ID = "flat_id"

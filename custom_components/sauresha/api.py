@@ -80,8 +80,8 @@ class SauresHA:
                 else:
                     bln_return = True
 
-        except Exception as e:  # catch *all* exceptions
-            _LOGGER.error(str(e))
+        except Exception as err:  # catch *all* exceptions
+            _LOGGER.error(str(err))
 
         return bln_return
 
@@ -106,9 +106,9 @@ class SauresHA:
                         self._flats[
                             val.get("id")
                         ] = f"{val.get('label')}:{val.get('house')}:{val.get('number')}"
-            except Exception as e:
+            except Exception as err:
                 if self._debug:
-                    _LOGGER.error(str(e))
+                    _LOGGER.error(str(err))
         else:
             self._flats = self.userflats
 
@@ -171,9 +171,9 @@ class SauresHA:
                     msg = f'Ошибка выполнения комманды -  command: {command_text} ,meter_id: {meter_id}, ошибка: {result["errors"][0]["msg"]}.'
                     _LOGGER.warning(msg)
 
-        except Exception as e:  # catch *all* exceptions
+        except Exception as err:  # catch *all* exceptions
             if self._debug:
-                _LOGGER.error(str(e))
+                _LOGGER.error(str(err))
 
         return bln_return
 
@@ -198,9 +198,9 @@ class SauresHA:
                     )
                     data = await controllers.json()
                     self._data[flat_id] = data["data"]["sensors"]
-                except Exception as e:
+                except Exception as err:
                     if self._debug:
-                        _LOGGER.error(str(e))
+                        _LOGGER.error(str(err))
 
         self._update_lock = False
         return self._data[flat_id]
