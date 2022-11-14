@@ -10,7 +10,7 @@
 [![Donate](https://img.shields.io/badge/donate-Coffee-yellow.svg)](https://https://www.buymeacoffee.com/RlnBV9r)
 [![Donate](https://img.shields.io/badge/donate-Yandex-red.svg)](https://yoomoney.ru/to/41001566881198/150)
 
-Пожертвование на развитие проекта  [Яндекс.Деньги](https://money.yandex.ru/to/41001566881198)
+Пожертвование на развитие проекта  [Яндекс.Деньги](https://yoomoney.ru/to/41001566881198)
 
 ## Update 1: Начиная с версии 0.3:
  * сделан переход на новое клиентское API
