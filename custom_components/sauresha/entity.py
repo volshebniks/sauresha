@@ -179,8 +179,8 @@ class SauresSensor(Entity):
             if self.isDebug:
                 _LOGGER.warning("Update Finish meter_id: %s", str(self.meter_id))
 
-        except Exception as e:
-            _LOGGER.error(e)
+        except Exception as err:
+            _LOGGER.error(err)
 
         return str_return_value
 

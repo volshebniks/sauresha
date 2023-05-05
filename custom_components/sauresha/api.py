@@ -64,7 +64,7 @@ class SauresHA:
                 clientsession = async_get_clientsession(self._hass)
                 self._last_login_time = datetime.datetime.now()
                 auth_data = await clientsession.post(
-                    "https://api.saures.ru/login",
+                    "https://api.saures.ru/1.0/login",
                     data={"email": self._email, "password": self._password},
                 )
                 result = await auth_data.json()

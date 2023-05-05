@@ -93,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         CONF_DEBUG: CONF_ISDEBUG,
         COORDINATOR: SauresAPI,
     }
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 
 
