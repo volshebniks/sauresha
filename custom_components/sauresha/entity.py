@@ -528,13 +528,13 @@ class SauresSwitch(SwitchEntity):
     @property
     def unique_id(self):
         """Return a unique ID to use for this sensor."""
-        return self._unique_id
+        return f"sauresha_switch_{self.flat_id}_{self.serial_number}"
 
     @property
     def name(self):
         """Return the entity_id of the sensor."""
         if not self.counter_name:
-            self.counter_name = f" [{self.flat_id}] [{self.meter_id}]"
+            self.counter_name = f"[SAURES][{self.flat_id}] [{self.meter_id}]"
         return f"[SAURES] {self.counter_name}"
 
     async def async_turn_on(self, **kwargs) -> None:

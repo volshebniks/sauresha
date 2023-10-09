@@ -38,6 +38,7 @@ class SauresHA:
         self.userflats = userflats
         self._hass = hass
         self._update_lock = False
+        self._sid_renewal = False
 
     def checkflatsfilter(self, filter_flats, flat_id):
         if len(filter_flats) == 0:
@@ -60,13 +61,18 @@ class SauresHA:
         try:
             now = datetime.datetime.now()
             period = now - self._last_login_time
-            if (period.total_seconds() / 60) > 5:
+            if (period.total_seconds() / 60) >= 15:
                 clientsession = async_get_clientsession(self._hass)
                 self._last_login_time = datetime.datetime.now()
+                if self._sid_renewal:
+                    return False
+                self._sid_renewal = True
                 auth_data = await clientsession.post(
                     "https://api.saures.ru/1.0/login",
                     data={"email": self._email, "password": self._password},
+                    headers={"user-agent": "chrome"},
                 )
+
                 result = await auth_data.json()
                 if not result:
                     raise Exception("Invalid credentials")
@@ -75,12 +81,14 @@ class SauresHA:
                 self._sid = result["data"]["sid"]
                 bln_return = result["status"] != "bad"
             else:
+                self._sid_renewal = False
                 if self._sid == "":
                     bln_return = False
                 else:
                     bln_return = True
 
         except Exception as err:  # catch *all* exceptions
+            self._sid_renewal = False
             _LOGGER.error(str(err))
 
         return bln_return
@@ -97,6 +105,7 @@ class SauresHA:
                     flats_data = await clientsession.get(
                         "https://api.saures.ru/1.0/user/objects",
                         params={"sid": self._sid},
+                        headers={"user-agent": "chrome"},
                     )
 
                     result = await flats_data.json()
@@ -133,6 +142,7 @@ class SauresHA:
     # 7.2 - контроллер R6 8 аналоговых каналов и 32 цифровых каналов
     # 8.2 - контроллер R7 4 аналоговых канала и 32 цифровых каналов (снят с продаж в 2020 году)
     # 8.3 - контроллер R7 4 аналоговых канала и 32 цифровых каналов
+    # 9.1 - контроллер R8(после 2022)
     def get_controller_name(self, version_id):
         return {
             version_id == "1.3"
@@ -147,6 +157,7 @@ class SauresHA:
             version_id == "7.2": "контроллер R6",
             version_id == "8.2": "контроллер R7(до 2020)",
             version_id == "8.3": "контроллер R7(после 2020)",
+            version_id == "9.1": "контроллер R8(после 2022)",
         }[True]
 
     async def set_command(self, meter_id, command_text):
@@ -159,8 +170,9 @@ class SauresHA:
             if auth_data:
                 self._last_login_time = datetime.datetime.now()
                 res_data = await clientsession.post(
-                    "https://api.saures.ru/1.0/meter/control",
+                    "https://api.saures.ru//1.0/meter/control",
                     data={"sid": self._sid, "id": meter_id, "command": command_text},
+                    headers={"user-agent": "chrome"},
                 )
                 result = await res_data.json()
                 if not result:
@@ -184,25 +196,29 @@ class SauresHA:
                 2000, 1, 1, 1, 1, 1
             )
         period = now - self._last_update_time_dict[flat_id]
-        if (period.total_seconds() / 60) > 5 or reload:
+        if (period.total_seconds() / 60) > 15 or reload:
             self._last_update_time_dict[flat_id] = datetime.datetime.now()
             lock = asyncio.Lock()
             async with lock:
                 auth_data = await self.auth()
             if auth_data:
-                try:
-                    clientsession = async_get_clientsession(self._hass)
-                    controllers = await clientsession.get(
-                        "https://api.saures.ru/1.0/object/meters",
-                        params={"id": str(flat_id), "sid": self._sid},
-                    )
-                    data = await controllers.json()
-                    self._data[flat_id] = data["data"]["sensors"]
-                except Exception as err:
-                    if self._debug:
-                        _LOGGER.error(str(err))
+                    try:
+                        self._update_lock = True
+                        clientsession = async_get_clientsession(self._hass)
+                        controllers = await clientsession.get(
+                            "https://api.saures.ru/1.0/object/meters",
+                            params={"id": str(flat_id), "sid": self._sid},
+                            headers={"user-agent": "chrome"},
+                        )
+                        if controllers.status == 200:
+                            data = await controllers.json(content_type=None)
+                            self._data[flat_id] = data["data"]["sensors"]
+                            self._update_lock = False
+                    except Exception as err:
+                        self._update_lock = False
+                        if self._debug:
+                            _LOGGER.error(str(err))
 
-        self._update_lock = False
         return self._data[flat_id]
 
     async def async_get_controllers(self, flat_id):
@@ -247,18 +263,19 @@ class SauresHA:
         async with lock:
             meters = await self.async_get_data(flat_id)
 
-        res = functools.reduce(
-            list.__add__, map(lambda sensor: sensor["meters"], meters)
-        )
-        for obj in res:
-            objtype = obj.get("type", {}).get("number")
-            if (
-                objtype not in CONF_BINARY_SENSORS_DEF
-                and objtype not in CONF_SWITCH_DEF
-            ):
-                results.append(obj)
+        if meters:
+            res = functools.reduce(
+                list.__add__, map(lambda sensor: sensor["meters"], meters)
+            )
+            for obj in res:
+                objtype = obj.get("type", {}).get("number")
+                if (
+                    objtype not in CONF_BINARY_SENSORS_DEF
+                    and objtype not in CONF_SWITCH_DEF
+                ):
+                    results.append(obj)
 
-        self._sensors[flat_id] = results
+            self._sensors[flat_id] = results
 
         return self._sensors[flat_id]
 
@@ -311,9 +328,13 @@ class SauresHA:
                 flats = await self.async_get_flats(self._hass)
                 self._flats = flats
                 for curflat in flats:
-                    await self.async_get_controllers(curflat)
-                    await self.async_get_sensors(curflat)
-                    await self.async_get_binary_sensors(curflat)
-                    await self.async_get_switches(curflat, False)
+                    try:
+                        await self.async_get_controllers(curflat)
+                        await self.async_get_sensors(curflat)
+                        await self.async_get_binary_sensors(curflat)
+                        await self.async_get_switches(curflat, False)
+                        await asyncio.sleep(10)
+                    except Exception:
+                        _LOGGER.exception("Error load data")
         except Exception:
             _LOGGER.exception("Error load data")
