@@ -266,3 +266,5 @@ __pycache__/
 /.vscode
 *.zip
 /custom_components/sauresha/LICENSE
+custom_components/sauresha/.vscode/settings.json
+.gitignore
