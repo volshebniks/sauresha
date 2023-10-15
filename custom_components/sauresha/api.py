@@ -21,7 +21,6 @@ class SauresHA:
     _data: dict
     _flats: list
     _hass: object
-    _update_lock: bool
 
     def __init__(self, hass, email, password, is_debug, userflats):
         self._email = email
@@ -37,7 +36,6 @@ class SauresHA:
         self._flats = list()
         self.userflats = userflats
         self._hass = hass
-        self._update_lock = False
         self._sid_renewal = False
 
     def checkflatsfilter(self, filter_flats, flat_id):
@@ -61,7 +59,7 @@ class SauresHA:
         try:
             now = datetime.datetime.now()
             period = now - self._last_login_time
-            if (period.total_seconds() / 60) >= 15:
+            if (period.total_seconds() / 60) >= 5:
                 clientsession = async_get_clientsession(self._hass)
                 self._last_login_time = datetime.datetime.now()
                 if self._sid_renewal:
@@ -196,14 +194,13 @@ class SauresHA:
                 2000, 1, 1, 1, 1, 1
             )
         period = now - self._last_update_time_dict[flat_id]
-        if (period.total_seconds() / 60) > 15 or reload:
+        if (period.total_seconds() / 60) >= 5 or reload:
             self._last_update_time_dict[flat_id] = datetime.datetime.now()
             lock = asyncio.Lock()
             async with lock:
                 auth_data = await self.auth()
             if auth_data:
                     try:
-                        self._update_lock = True
                         clientsession = async_get_clientsession(self._hass)
                         controllers = await clientsession.get(
                             "https://api.saures.ru/1.0/object/meters",
@@ -213,9 +210,7 @@ class SauresHA:
                         if controllers.status == 200:
                             data = await controllers.json(content_type=None)
                             self._data[flat_id] = data["data"]["sensors"]
-                            self._update_lock = False
                     except Exception as err:
-                        self._update_lock = False
                         if self._debug:
                             _LOGGER.error(str(err))
 
