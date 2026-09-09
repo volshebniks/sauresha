@@ -1,13 +1,13 @@
 #  Copyright (c) 2020-2026, Sergey Golynskiy <master@g-s-a.me>
 #  Creative Commons BY-NC-SA 4.0 International Public License
 #  (see LICENSE.md or https://creativecommons.org/licenses/by-nc-sa/4.0/)
-"""Constants for the SauresHA integration."""
+"""Константы интеграции SauresHA."""
 
 from homeassistant.const import Platform
 
 NAME = "Saures"
 DOMAIN = "sauresha"
-VERSION = "2.0.0"
+VERSION = "2.1.0"
 ATTRIBUTION = "Home assistant component for Saures"
 ISSUE_URL = "https://github.com/volshebniks/sauresha/issues"
 
@@ -46,5 +46,5 @@ MIN_SCAN_INTERVAL = 5
 
 
 def controller_device_identifier(flat_id, controller_sn: str) -> str:
-    """Stable device id used in the Home Assistant device registry."""
+    """Сформировать стабильный идентификатор устройства контроллера для реестра HA."""
     return f"{flat_id}_{controller_sn}"

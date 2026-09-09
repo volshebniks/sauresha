@@ -1,4 +1,4 @@
-"""Config flow for SauresHA."""
+"""Поток настройки (config flow) интеграции SauresHA."""
 
 from __future__ import annotations
 
@@ -24,18 +24,18 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SaureshaConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for SauresHA."""
+    """Обработчик первичной настройки интеграции через UI."""
 
     VERSION = 1
 
     def __init__(self) -> None:
-        """Init config flow."""
+        """Инициализировать поток настройки."""
         self._errors: dict[str, str] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
+        """Обработать первый шаг: ввод email, пароля и интервала опроса."""
         self._errors = {}
 
         if user_input is not None:
@@ -74,7 +74,7 @@ class SaureshaConfigFlow(ConfigFlow, domain=DOMAIN):
     def _show_config_form(
         self, user_input: dict[str, Any]
     ) -> ConfigFlowResult:
-        """Show the configuration form."""
+        """Показать форму первичной настройки."""
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -97,17 +97,17 @@ class SaureshaConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        """Get the options flow for this handler."""
+        """Вернуть обработчик дополнительных параметров интеграции."""
         return SaureshaOptionsFlowHandler()
 
 
 class SaureshaOptionsFlowHandler(OptionsFlow):
-    """Handle SauresHA options."""
+    """Обработчик параметров: выбор объектов (квартир) Saures."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage the options."""
+        """Показать и сохранить список объектов для опроса."""
         errors: dict[str, str] = {}
 
         if user_input is not None:

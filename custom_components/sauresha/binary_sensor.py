@@ -1,4 +1,4 @@
-"""Binary sensor platform for SauresHA."""
+"""Платформа binary_sensor для SauresHA."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up SauresHA binary sensor platform."""
+    """Настроить платформу binary_sensor: датчики протечки и контакты."""
     coordinator: SauresDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id][
         COORDINATOR
     ]

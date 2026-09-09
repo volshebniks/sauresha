@@ -1,4 +1,4 @@
-"""API client for Saures cloud."""
+"""Клиент облачного API Saures."""
 
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ CONTROLLER_NAMES = {
 
 
 class SauresHA:
-    """Saures API wrapper."""
+    """Обёртка над API Saures: авторизация, объекты, показания и команды."""
 
     def __init__(
         self,
@@ -57,7 +57,7 @@ class SauresHA:
         is_debug: bool,
         userflats: list | dict | str,
     ) -> None:
-        """Initialize API client."""
+        """Инициализировать клиент API."""
         self._email = email
         self._password = password
         self._debug = bool(is_debug)
@@ -78,11 +78,11 @@ class SauresHA:
 
     @property
     def flats(self):
-        """Return configured flats (dict keys or list of ids)."""
+        """Вернуть список/словарь настроенных объектов (квартир)."""
         return self._flats
 
     def _get_session(self) -> aiohttp.ClientSession:
-        """Return a dedicated session (IPv4) with Saures-friendly headers."""
+        """Получить отдельную HTTP-сессию (IPv4) с заголовками для Saures."""
         if self._session is None or self._session.closed:
             # Prefer IPv4: IPv6 routes often cause Connection reset by peer.
             self._session = async_create_clientsession(
@@ -101,7 +101,7 @@ class SauresHA:
         params: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Perform API request with retries on connection resets."""
+        """Выполнить HTTP-запрос к API с повторами при обрыве соединения."""
         url = f"{API_BASE}{path}"
         last_error: Exception | None = None
 
@@ -148,7 +148,7 @@ class SauresHA:
         ) from last_error
 
     async def auth(self) -> bool:
-        """Authenticate against Saures API and cache session id."""
+        """Авторизоваться в API Saures и сохранить идентификатор сессии (sid)."""
         try:
             now = datetime.datetime.now()
             period = now - self._last_login_time
@@ -180,7 +180,7 @@ class SauresHA:
             return False
 
     async def async_get_flats(self, hass) -> dict[Any, str]:
-        """Return mapping of flat_id -> label."""
+        """Получить словарь объектов пользователя: id -> описание."""
         if self.userflats:
             if isinstance(self.userflats, dict):
                 self._flats = self.userflats
@@ -211,13 +211,13 @@ class SauresHA:
 
     @staticmethod
     def get_controller_name(version_id: str | None) -> str:
-        """Return human-readable controller model name."""
+        """Вернуть читаемое название модели контроллера по версии hardware."""
         if not version_id:
             return "контроллер Saures"
         return CONTROLLER_NAMES.get(str(version_id), f"контроллер ({version_id})")
 
     async def set_command(self, meter_id: Any, command_text: str) -> bool:
-        """Send control command to meter/switch."""
+        """Отправить команду управления устройству (например, крану)."""
         try:
             if not await self.auth():
                 return False
@@ -245,7 +245,7 @@ class SauresHA:
             return False
 
     async def async_get_data(self, flat_id: Any, reload: bool = False) -> list:
-        """Fetch and cache meters for a flat."""
+        """Загрузить и закэшировать контроллеры/метры для объекта."""
         now = datetime.datetime.now()
         last_update = self._last_update_time_dict.get(
             flat_id, datetime.datetime(2000, 1, 1, 1, 1, 1)
@@ -267,13 +267,13 @@ class SauresHA:
         return self._data.get(flat_id, [])
 
     async def async_get_controllers(self, flat_id: Any) -> list:
-        """Return controllers for flat."""
+        """Вернуть список контроллеров объекта."""
         controllers = await self.async_get_data(flat_id)
         self._controllers[flat_id] = controllers
         return controllers
 
     def get_controller(self, flat_id: Any, sn: str) -> SauresController:
-        """Return controller by serial number."""
+        """Найти контроллер объекта по серийному номеру."""
         controllers = self._controllers.get(flat_id, [])
         return next(
             (
@@ -286,7 +286,7 @@ class SauresHA:
 
     @staticmethod
     def _meters_with_controller(controllers: list) -> list[dict[str, Any]]:
-        """Flatten meters and keep parent controller metadata for device registry."""
+        """Развернуть метры и сохранить данные родительского контроллера."""
         results: list[dict[str, Any]] = []
         for controller in controllers or []:
             controller_sn = controller.get("sn")
@@ -302,7 +302,7 @@ class SauresHA:
         return results
 
     async def async_get_binary_sensors(self, flat_id: Any) -> list:
-        """Return binary sensors for flat."""
+        """Вернуть бинарные датчики объекта (протечка, состояние крана и т.п.)."""
         controllers = await self.async_get_data(flat_id)
         results = []
         for obj in self._meters_with_controller(controllers):
@@ -313,7 +313,7 @@ class SauresHA:
         return results
 
     async def async_get_sensors(self, flat_id: Any) -> list:
-        """Return non-binary, non-switch meters for flat."""
+        """Вернуть обычные счётчики объекта (не binary и не switch)."""
         controllers = await self.async_get_data(flat_id)
         results = []
         for obj in self._meters_with_controller(controllers):
@@ -327,21 +327,21 @@ class SauresHA:
         return results
 
     def get_sensor(self, flat_id: Any, sensor_id: Any) -> SauresSensor:
-        """Return sensor by meter id."""
+        """Получить счётчик из кэша по meter_id."""
         for obj in self._sensors.get(flat_id, []):
             if obj.get("meter_id") == sensor_id:
                 return SauresSensor(obj)
         return SauresSensor({})
 
     def get_binarysensor(self, flat_id: Any, sensor_id: Any) -> SauresSensor:
-        """Return binary sensor by meter id."""
+        """Получить бинарный датчик из кэша по meter_id."""
         for obj in self._binarysensors.get(flat_id, []):
             if obj.get("meter_id") == sensor_id:
                 return SauresSensor(obj)
         return SauresSensor({})
 
     async def async_get_switches(self, flat_id: Any, reload: bool) -> list:
-        """Return switches for flat."""
+        """Вернуть управляемые устройства (краны) объекта."""
         controllers = await self.async_get_data(flat_id, reload=reload)
         results = []
         for obj in self._meters_with_controller(controllers):
@@ -351,31 +351,41 @@ class SauresHA:
         return results
 
     def get_switch(self, flat_id: Any, switch_id: Any) -> SauresSensor:
-        """Return switch by meter id."""
+        """Получить кран/switch из кэша по meter_id."""
         for obj in self._switches.get(flat_id, []):
             if obj.get("meter_id") == switch_id:
                 return SauresSensor(obj)
         return SauresSensor({})
 
-    async def async_fetch_data(self) -> None:
-        """Refresh flats and all related meter caches."""
+    async def async_fetch_data(self, *, delay_between_flats: float = 0) -> None:
+        """Обновить объекты и все связанные кэши показаний.
+
+        Args:
+            delay_between_flats: пауза между объектами (сек). На первом старте
+                должна быть 0 — иначе Home Assistant отменяет setup по таймауту.
+        """
         try:
             if not await self.auth():
                 raise RuntimeError("Authentication failed")
 
             flats = await self.async_get_flats(self._hass)
             self._flats = flats
-            for index, curflat in enumerate(flats):
+            flat_ids = list(flats)
+            for index, curflat in enumerate(flat_ids):
                 try:
+                    # Один запрос /object/meters наполняет все кэши объекта
                     await self.async_get_controllers(curflat)
                     await self.async_get_sensors(curflat)
                     await self.async_get_binary_sensors(curflat)
                     await self.async_get_switches(curflat, False)
-                    # Avoid API rate limits between flats
-                    if index < len(flats) - 1:
-                        await asyncio.sleep(10)
+                    if delay_between_flats > 0 and index < len(flat_ids) - 1:
+                        await asyncio.sleep(delay_between_flats)
+                except asyncio.CancelledError:
+                    raise
                 except Exception:
                     _LOGGER.exception("Error load data for flat %s", curflat)
+        except asyncio.CancelledError:
+            raise
         except Exception:
             _LOGGER.exception("Error load data")
             raise

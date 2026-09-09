@@ -1,4 +1,4 @@
-"""Saures data models."""
+"""Модели данных ответа API Saures."""
 
 from __future__ import annotations
 
@@ -6,10 +6,10 @@ from typing import Any
 
 
 class SauresController:
-    """Saures controller snapshot."""
+    """Снимок состояния контроллера Saures."""
 
     def __init__(self, data: dict[str, Any] | None) -> None:
-        """Initialize from API payload."""
+        """Создать объект контроллера из JSON-ответа API."""
         data = data or {}
         self.data = data
         self.name = data.get("name") or data.get("sn")
@@ -35,10 +35,10 @@ class SauresController:
 
 
 class SauresSensor:
-    """Saures meter / sensor snapshot."""
+    """Снимок показаний счётчика или датчика Saures."""
 
     def __init__(self, data: dict[str, Any] | None) -> None:
-        """Initialize from API payload."""
+        """Создать объект счётчика/датчика из JSON-ответа API."""
         data = data or {}
         self.data = data
         self.name = data.get("meter_name")
