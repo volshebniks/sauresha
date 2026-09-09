@@ -1,10 +1,18 @@
-"""Saures entity base class."""
+"""Saures data models."""
+
+from __future__ import annotations
+
+from typing import Any
 
 
 class SauresController:
-    def __init__(self, data):
+    """Saures controller snapshot."""
+
+    def __init__(self, data: dict[str, Any] | None) -> None:
+        """Initialize from API payload."""
+        data = data or {}
         self.data = data
-        self.name = data.get("sn")
+        self.name = data.get("name") or data.get("sn")
         self.sn = data.get("sn")
         self.battery = data.get("bat")
         self.ssid = data.get("ssid")
@@ -12,7 +20,6 @@ class SauresController:
         self.firmware = data.get("firmware")
         self.readout_dt = data.get("readout_dt")
         self.request_dt = data.get("request_dt")
-        self.last_connection = data.get("last_connection")
         self.state = "OK"
         self.rssi = data.get("rssi")
         self.hardware = data.get("hardware")
@@ -28,7 +35,11 @@ class SauresController:
 
 
 class SauresSensor:
-    def __init__(self, data):
+    """Saures meter / sensor snapshot."""
+
+    def __init__(self, data: dict[str, Any] | None) -> None:
+        """Initialize from API payload."""
+        data = data or {}
         self.data = data
         self.name = data.get("meter_name")
         self.type_number = data.get("type", {}).get("number")
@@ -39,26 +50,25 @@ class SauresSensor:
         self.meter_id = data.get("meter_id")
         self.input = data.get("input")
         self.approve_dt = data.get("approve_dt")
+        self.t1 = "-"
+        self.t2 = "-"
+        self.t3 = "-"
+        self.t4 = "-"
 
-        self.values = data.get("vals", [])
+        self.values = data.get("vals") or []
 
         if len(self.values) == 2:
-            self.value = "{0}/{1}".format(self.values[0], self.values[1])
+            self.value = f"{self.values[0]}/{self.values[1]}"
             self.t1 = self.values[0]
             self.t2 = self.values[1]
-            self.t3 = "-"
-            self.t4 = "-"
         elif len(self.values) == 3:
-            self.value = "{0}/{1}/{2}".format(
-                self.values[0], self.values[1], self.values[2]
-            )
+            self.value = f"{self.values[0]}/{self.values[1]}/{self.values[2]}"
             self.t1 = self.values[0]
             self.t2 = self.values[1]
             self.t3 = self.values[2]
-            self.t4 = "-"
         elif len(self.values) == 4:
-            self.value = "{0}/{1}/{2}/{3}".format(
-                self.values[0], self.values[1], self.values[2], self.values[3]
+            self.value = (
+                f"{self.values[0]}/{self.values[1]}/{self.values[2]}/{self.values[3]}"
             )
             self.t1 = self.values[0]
             self.t2 = self.values[1]
@@ -67,6 +77,3 @@ class SauresSensor:
         elif len(self.values) == 1:
             self.value = self.values[0]
             self.t1 = self.values[0]
-            self.t2 = "-"
-            self.t3 = "-"
-            self.t4 = "-"

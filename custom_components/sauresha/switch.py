@@ -1,41 +1,54 @@
+"""Switch platform for SauresHA."""
+
+from __future__ import annotations
+
 import logging
-from homeassistant.const import CONF_SCAN_INTERVAL
-from datetime import timedelta
+
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, COORDINATOR, CONF_ISDEBUG
-from .api import SauresHA
+from .const import COORDINATOR, DOMAIN
+from .coordinator import SauresDataUpdateCoordinator
 from .entity import SauresSwitch
-
-SCAN_INTERVAL = timedelta(minutes=20)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
-    """Setup switch platform."""
-    my_sensors: list = []
-    is_debug = CONF_ISDEBUG
-    scan_interval = config_entry.data.get(CONF_SCAN_INTERVAL)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up SauresHA switch platform."""
+    coordinator: SauresDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id][
+        COORDINATOR
+    ]
+    api = coordinator.api
+    entities: list = []
 
-    controller: SauresHA = hass.data[DOMAIN].get(COORDINATOR)
-    for curflat in controller.flats:
+    for curflat in api.flats:
         try:
-            sensors = await controller.async_get_switches(curflat, False)
-            for curSensor in sensors:
-                sensor = SauresSwitch(
-                    hass,
-                    controller,
-                    curflat,
-                    curSensor.get("meter_id"),
-                    curSensor.get("sn"),
-                    curSensor.get("meter_name"),
-                    is_debug,
-                    scan_interval,
+            sensors = await api.async_get_switches(curflat, False)
+            for cur_sensor in sensors:
+                controller_sn = cur_sensor.get("controller_sn")
+                if not controller_sn:
+                    continue
+                entities.append(
+                    SauresSwitch(
+                        coordinator,
+                        curflat,
+                        cur_sensor.get("meter_id"),
+                        cur_sensor.get("sn"),
+                        cur_sensor.get("meter_name"),
+                        controller_sn=controller_sn,
+                        controller_name=cur_sensor.get("controller_name"),
+                        controller_hardware=cur_sensor.get("controller_hardware"),
+                        controller_firmware=cur_sensor.get("controller_firmware"),
+                    )
                 )
-                my_sensors.append(sensor)
         except Exception:
-            _LOGGER.exception(str(Exception))
+            _LOGGER.exception("Error setting up switches for flat %s", curflat)
 
-    if my_sensors:
-        async_add_entities(my_sensors, True)
+    if entities:
+        async_add_entities(entities)

@@ -1,6 +1,6 @@
 {
   "name": "Integration Saures controllers with HA",
-  "domains": ["binary_sensor", "sensor", "switch"],
-  "homeassistant": "0.104",
+  "homeassistant": "2025.1.0",
+  "render_readme": true,
   "country": ["RU"]
 }

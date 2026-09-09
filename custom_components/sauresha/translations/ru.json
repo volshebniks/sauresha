@@ -1,31 +1,35 @@
 {
   "config": {
-      "abort": {
-          "no_mixed_config": "Настройка уже выполнена. Настройка через configuration.yaml несовместима с настройкой через интерфейс."
-      },
-      "error": {
-          "cannot_connect": "Не удалось подключиться."
-      },
-      "step": {
-          "user": {
-              "data": {
-                  "email": "имя пользователя (email)",
-                  "password": "пароль",
-                  "scan_interval": "пауза между обновлениями (мин)"
-              },
-              "description": "Ознакомьтесь с инструкциями, если Вам нужна помощь с настройкой:\nhttps://github.com/volshebniks/sauresha",
-              "title": "Интеграция HA c Saures"
-          }
+    "abort": {
+      "already_configured": "Этот аккаунт уже настроен."
+    },
+    "error": {
+      "cannot_connect": "Не удалось подключиться. Проверьте email и пароль."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "email": "Email",
+          "password": "Пароль",
+          "scan_interval": "Интервал обновления (минуты)"
+        },
+        "description": "Документация: https://github.com/volshebniks/sauresha",
+        "title": "SauresHA"
       }
+    }
   },
   "options": {
-      "step": {
-          "init": {
-              "data": {
-                  "flat": "квартиры"
-              },
-              "title": "Настройки Saures"
-          }
+    "error": {
+      "cannot_connect": "Не удалось подключиться. Проверьте email и пароль."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "flats": "Квартиры / объекты"
+        },
+        "description": "Выберите объекты для включения. Пустой список — все объекты.",
+        "title": "Настройки SauresHA"
       }
+    }
   }
 }

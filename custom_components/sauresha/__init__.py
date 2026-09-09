@@ -1,101 +1,87 @@
 """Support for Saures Connect appliances."""
 
-import logging
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant import config_entries
+from __future__ import annotations
 
-from homeassistant.core import HomeAssistant
+import logging
+from datetime import timedelta
+
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 from .api import SauresHA
 from .const import (
-    DOMAIN,
     CONF_DEBUG,
     CONF_FLATS,
-    CONF_FLAT_ID,
     CONF_ISDEBUG,
-    STARTUP_MESSAGE,
-    PLATFORMS,
     COORDINATOR,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    PLATFORMS,
+    STARTUP_MESSAGE,
 )
+from .coordinator import SauresDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up component."""
-
-    domain_config = config.get("sensor")
-    if not domain_config:
-        return True
-
-    yaml_config = {}
-    hass.data[DOMAIN] = yaml_config
-
-    for user_cfg in domain_config:
-        if not user_cfg:
-            continue
-        if not user_cfg.get(CONF_EMAIL):
-            continue
-        if not user_cfg.get(CONF_PASSWORD):
-            continue
-
-        yaml_email: str = user_cfg[CONF_EMAIL]
-        yaml_password: str = user_cfg[CONF_PASSWORD]
-        yaml_flatid = user_cfg[CONF_FLAT_ID]
-
-        user_input = {
-            CONF_EMAIL: yaml_email,
-            CONF_PASSWORD: yaml_password,
-            CONF_SCAN_INTERVAL: 30,
-            CONF_FLATS: yaml_flatid,
-        }
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={
-                    "source": config_entries.SOURCE_IMPORT,
-                    "title": user_input[CONF_EMAIL],
-                },
-                data=user_input,
-            )
-        )
-
-    # Print startup messages
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the SauresHA component."""
     hass.data.setdefault(DOMAIN, {})
     _LOGGER.info(STARTUP_MESSAGE)
-    # Clean up old imports from configuration.yaml
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.source == SOURCE_IMPORT:
-            await hass.config_entries.async_remove(entry.entry_id)
-
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    cur_config = config_entry.data
-    cur_options = config_entry.options
-    curFlats = {}
-    if cur_options.get(CONF_FLATS):
-        curFlats = cur_options.get(CONF_FLATS)
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up SauresHA from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
 
-    SauresAPI: SauresHA = SauresHA(
+    flats = entry.options.get(CONF_FLATS, [])
+    scan_interval = entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    if scan_interval < 5:
+        scan_interval = DEFAULT_SCAN_INTERVAL
+
+    api = SauresHA(
         hass,
-        cur_config.get(CONF_EMAIL),
-        cur_config.get(CONF_PASSWORD),
+        entry.data[CONF_EMAIL],
+        entry.data[CONF_PASSWORD],
         CONF_ISDEBUG,
-        curFlats,
+        flats,
     )
-    await SauresAPI.async_fetch_data()
 
-    hass.data[DOMAIN] = {
-        CONF_SCAN_INTERVAL: cur_config.get(CONF_SCAN_INTERVAL),
+    coordinator = SauresDataUpdateCoordinator(
+        hass,
+        entry,
+        api,
+        timedelta(minutes=scan_interval),
+    )
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        CONF_SCAN_INTERVAL: scan_interval,
         CONF_DEBUG: CONF_ISDEBUG,
-        COORDINATOR: SauresAPI,
+        COORDINATOR: coordinator,
     }
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
 
 
-async def async_migrate_entry(hass, config_entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+    return unload_ok
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload config entry when options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
     return True

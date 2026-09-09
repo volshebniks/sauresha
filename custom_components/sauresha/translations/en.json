@@ -1,31 +1,35 @@
 {
   "config": {
-      "abort": {
-          "no_mixed_config": "Settings is complited already. Настройка через configuration.yaml несовместима с настройкой через интерфейс."
-      },
-      "error": {
-          "cannot_connect": "Не удалось подключиться."
-      },
-      "step": {
-          "user": {
-              "data": {
-                  "email": "login (email)",
-                  "password": "password",
-                  "scan_interval": "pause between updates (min)"
-              },
-              "description": "Read the documentation, if you need a help :\nhttps://github.com/volshebniks/sauresha",
-              "title": "Integration HA with Saures"
-          }
+    "abort": {
+      "already_configured": "This account is already configured."
+    },
+    "error": {
+      "cannot_connect": "Could not connect. Check email and password."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "email": "Email",
+          "password": "Password",
+          "scan_interval": "Update interval (minutes)"
+        },
+        "description": "Documentation: https://github.com/volshebniks/sauresha",
+        "title": "SauresHA"
       }
+    }
   },
   "options": {
-      "step": {
-          "init": {
-              "data": {
-                  "flat": "flats"
-              },
-              "title": "Saures settings"
-          }
+    "error": {
+      "cannot_connect": "Could not connect. Check email and password."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "flats": "Flats / objects"
+        },
+        "description": "Select flats to include. Leave empty to include all.",
+        "title": "SauresHA options"
       }
+    }
   }
 }

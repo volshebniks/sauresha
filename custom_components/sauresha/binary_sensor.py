@@ -1,51 +1,55 @@
+"""Binary sensor platform for SauresHA."""
+
+from __future__ import annotations
+
 import logging
-from homeassistant.const import CONF_SCAN_INTERVAL
-from datetime import timedelta
+
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, COORDINATOR, CONF_ISDEBUG
-from .api import SauresHA
+from .const import COORDINATOR, DOMAIN
+from .coordinator import SauresDataUpdateCoordinator
 from .entity import SauresBinarySensor
-
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=20)
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up SauresHA binary sensor platform."""
+    coordinator: SauresDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id][
+        COORDINATOR
+    ]
+    api = coordinator.api
+    entities: list = []
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Setup the sensor platform."""
-    _LOGGER.exception(
-        "The sauresha platform for the binary sensor integration does not support YAML platform setup. Please remove it from your config"
-    )
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
-    """Setup sensor platform."""
-    my_sensors: list = []
-    is_debug = CONF_ISDEBUG
-    scan_interval = config_entry.data.get(CONF_SCAN_INTERVAL)
-
-    controller: SauresHA = hass.data[DOMAIN].get(COORDINATOR)
-    for curflat in controller.flats:
+    for curflat in api.flats:
         try:
-            sensors = await controller.async_get_binary_sensors(curflat)
-            for curSensor in sensors:
-                sensor = SauresBinarySensor(
-                    hass,
-                    controller,
-                    curflat,
-                    curSensor.get("type", {}).get("number"),
-                    curSensor.get("meter_id"),
-                    curSensor.get("sn"),
-                    curSensor.get("meter_name"),
-                    is_debug,
-                    scan_interval,
+            sensors = await api.async_get_binary_sensors(curflat)
+            for cur_sensor in sensors:
+                controller_sn = cur_sensor.get("controller_sn")
+                if not controller_sn:
+                    continue
+                entities.append(
+                    SauresBinarySensor(
+                        coordinator,
+                        curflat,
+                        cur_sensor.get("type", {}).get("number"),
+                        cur_sensor.get("meter_id"),
+                        cur_sensor.get("sn"),
+                        cur_sensor.get("meter_name"),
+                        controller_sn=controller_sn,
+                        controller_name=cur_sensor.get("controller_name"),
+                        controller_hardware=cur_sensor.get("controller_hardware"),
+                        controller_firmware=cur_sensor.get("controller_firmware"),
+                    )
                 )
-                my_sensors.append(sensor)
         except Exception:
-            _LOGGER.exception(str(Exception))
+            _LOGGER.exception("Error setting up binary sensors for flat %s", curflat)
 
-    if my_sensors:
-        async_add_entities(my_sensors, True)
+    if entities:
+        async_add_entities(entities)

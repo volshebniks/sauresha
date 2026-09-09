@@ -1,63 +1,73 @@
-"""Provides a sensor for Saures."""
+"""Sensor platform for SauresHA."""
+
+from __future__ import annotations
+
 import logging
-from homeassistant.const import CONF_SCAN_INTERVAL
-from datetime import timedelta
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from .const import DOMAIN, COORDINATOR, CONF_ISDEBUG
-from .api import SauresHA
-from .entity import SauresControllerSensor, SauresSensor
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-SCAN_INTERVAL = timedelta(minutes=20)
+from .const import COORDINATOR, DOMAIN
+from .coordinator import SauresDataUpdateCoordinator
+from .entity import SauresControllerSensor, SauresSensor
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Setup the sensor platform."""
-    _LOGGER.exception(
-        "The sauresha platform for the sensor integration does not support YAML platform setup. Please remove it from your config"
-    )
-    return True
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up SauresHA sensor platform."""
+    coordinator: SauresDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id][
+        COORDINATOR
+    ]
+    api = coordinator.api
+    entities: list = []
 
-
-async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
-    """Setup sensor platform."""
-    my_sensors: list = []
-    is_debug = CONF_ISDEBUG
-    scan_interval = config_entry.data.get(CONF_SCAN_INTERVAL)
-    controller: SauresHA = hass.data[DOMAIN].get(COORDINATOR)
-    for curflat in controller.flats:
+    for curflat in api.flats:
         try:
-            controllers = await controller.async_get_controllers(curflat)
+            controllers = await api.async_get_controllers(curflat)
             for obj in controllers:
-                if len(obj.get("sn")) > 0:
-                    my_controller = SauresControllerSensor(
-                        hass,
-                        controller,
+                sn = obj.get("sn")
+                if not sn:
+                    continue
+                entities.append(
+                    SauresControllerSensor(
+                        coordinator,
                         curflat,
-                        obj.get("sn"),
+                        sn,
                         obj.get("name"),
-                        is_debug,
-                        scan_interval,
+                        controller_hardware=obj.get("hardware"),
+                        controller_firmware=obj.get("firmware"),
                     )
-                    my_sensors.append(my_controller)
+                )
 
-                    sensors = await controller.async_get_sensors(curflat)
-                    for curSensor in sensors:
-                        sensor = SauresSensor(
-                            hass,
-                            controller,
-                            curflat,
-                            curSensor.get("meter_id"),
-                            curSensor.get("sn"),
-                            curSensor.get("meter_name"),
-                            is_debug,
-                            scan_interval,
-                        )
-                        my_sensors.append(sensor)
+            sensors = await api.async_get_sensors(curflat)
+            for cur_sensor in sensors:
+                controller_sn = cur_sensor.get("controller_sn")
+                if not controller_sn:
+                    continue
+                values = cur_sensor.get("vals") or []
+                entities.append(
+                    SauresSensor(
+                        coordinator,
+                        curflat,
+                        cur_sensor.get("meter_id"),
+                        cur_sensor.get("sn"),
+                        cur_sensor.get("meter_name"),
+                        cur_sensor.get("type", {}).get("number"),
+                        len(values),
+                        controller_sn=controller_sn,
+                        controller_name=cur_sensor.get("controller_name"),
+                        controller_hardware=cur_sensor.get("controller_hardware"),
+                        controller_firmware=cur_sensor.get("controller_firmware"),
+                    )
+                )
         except Exception:
-            _LOGGER.exception(str(Exception))
+            _LOGGER.exception("Error setting up sensors for flat %s", curflat)
 
-    if my_sensors:
-        async_add_entities(my_sensors, True)
+    if entities:
+        async_add_entities(entities)

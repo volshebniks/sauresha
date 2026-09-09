@@ -49,6 +49,19 @@
  * Добавлено управление кранами
  * настройка через GUI
 
+## Update 7: Начиная с версии 2.0.0:
+ * обновление модуля под Home Assistant 2025.1+ / 2026.x (актуальная версия на момент релиза)
+ * внедрён DataUpdateCoordinator: один опрос API Saures на все сущности вместо индивидуального polling
+ * сущности переведены на SensorEntity / BinarySensorEntity / SwitchEntity + CoordinatorEntity
+ * корректные device_class и единицы измерения (вода, газ, энергия, температура)
+ * исправлен OptionsFlow для совместимости с HA 2025.12+ (больше не падает при открытии параметров)
+ * добавлены unload/reload интеграции при изменении настроек
+ * обновлены manifest.json / hacs.json (`iot_class: cloud_polling`, `integration_type: hub`)
+ * исправлены ошибки API: auth lock, имя неизвестных контроллеров, URL команды управления краном
+ * устойчивость к обрывам связи с api.saures.ru (`Connection reset by peer`): User-Agent как в доке API (`HTTPie`), отдельная IPv4-сессия, повтор запросов
+ * сенсоры, binary_sensor и switch группируются в устройство контроллера в реестре устройств Home Assistant
+ * **требуется Home Assistant >= 2025.1.0**
+
 ## Содержание
 
 * [Установка](#устнановка)
@@ -57,7 +70,7 @@
 
 Для связи: <master@g-s-a.me>
 
-Интеграция котроллеров [Saures](https://www.saures.ru) c [Home Assistant](https://www.home-assistant.io/)
+Интеграция контроллеров [Saures](https://www.saures.ru) c [Home Assistant](https://www.home-assistant.io/)
 # Описание
 
 В настоящее время поддерживаются следующие типы устройств от Saurus
