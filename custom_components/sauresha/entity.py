@@ -170,16 +170,28 @@ class SauresSensor(SauresEntity, SensorEntity):  # pyright: ignore[reportIncompa
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
             self._attr_state_class = SensorStateClass.MEASUREMENT
         elif type_number == 8:
-            self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
-            # Combined multi-tariff strings are not valid numeric ENERGY values
+            # Многотарифные счётчики отдают строку "t1/t2/..." — без unit/device_class.
+            # Числовые тарифы создаются отдельными сущностями.
             if values_count <= 1:
+                self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
                 self._attr_device_class = SensorDeviceClass.ENERGY
                 self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     def _update_from_coordinator(self) -> None:
         """Обновить значение и атрибуты счётчика из кэша API."""
         meter = self.api.get_sensor(self.flat_id, self.meter_id)
-        self._attr_native_value = meter.value
+        value = meter.value
+        # Если пришла комбинированная строка тарифов — не оставляем numeric unit
+        if isinstance(value, str) and "/" in value:
+            self._attr_native_unit_of_measurement = None
+            self._attr_device_class = None
+            self._attr_state_class = None
+        elif self._attr_native_unit_of_measurement is not None:
+            try:
+                value = float(value)
+            except (TypeError, ValueError):
+                pass
+        self._attr_native_value = value
         attrs: dict[str, Any] = {
             "condition": meter.state,
             "sn": meter.sn,
@@ -199,6 +211,68 @@ class SauresSensor(SauresEntity, SensorEntity):  # pyright: ignore[reportIncompa
                 }
             )
         self._attr_extra_state_attributes = attrs
+
+
+class SauresTariffSensor(SauresEntity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
+    """Числовой сенсор отдельного тарифа электросчётчика Saures."""
+
+    def __init__(
+        self,
+        coordinator: SauresDataUpdateCoordinator,
+        flat_id: Any,
+        meter_id: Any,
+        sn: str,
+        counter_name: str,
+        tariff_index: int,
+        *,
+        controller_sn: str,
+        controller_name: str | None = None,
+        controller_hardware: str | None = None,
+        controller_firmware: str | None = None,
+    ) -> None:
+        """Инициализировать сенсор тарифа T1..T4."""
+        base_name = counter_name or f"[{flat_id}] [{meter_id}]"
+        display_name = f"[SAURES] {base_name} T{tariff_index}"
+        super().__init__(
+            coordinator,
+            flat_id,
+            f"{meter_id}_t{tariff_index}",
+            display_name,
+            controller_sn=controller_sn,
+            serial_number=sn,
+            controller_name=controller_name,
+            controller_hardware=controller_hardware,
+            controller_firmware=controller_firmware,
+        )
+        self.meter_id = meter_id
+        self.tariff_index = tariff_index
+        self._attr_icon = "mdi:lightning-bolt"
+        self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+        self._attr_device_class = SensorDeviceClass.ENERGY
+        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+        self._update_from_coordinator()
+
+    def _update_from_coordinator(self) -> None:
+        """Обновить показание выбранного тарифа из кэша API."""
+        meter = self.api.get_sensor(self.flat_id, self.meter_id)
+        values = meter.values or []
+        value: Any = None
+        if 0 < self.tariff_index <= len(values):
+            value = values[self.tariff_index - 1]
+        try:
+            value = float(value) if value is not None and value != "-" else None
+        except (TypeError, ValueError):
+            value = None
+        self._attr_native_value = value
+        self._attr_extra_state_attributes = {
+            "condition": meter.state,
+            "sn": meter.sn,
+            "type": meter.type,
+            "meter_id": meter.meter_id,
+            "input": meter.input,
+            "tariff": f"T{self.tariff_index}",
+            "controller_sn": self.controller_sn,
+        }
 
 
 class SauresBinarySensor(SauresEntity, BinarySensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
