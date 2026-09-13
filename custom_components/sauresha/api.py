@@ -12,7 +12,7 @@ import aiohttp
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .classes import SauresController, SauresSensor
-from .const import CONF_BINARY_SENSORS_DEF, CONF_SWITCH_DEF
+from .const import CONF_BINARY_SENSORS_DEF, CONF_OVERCONSUMPTION_METER_TYPES, CONF_SWITCH_DEF, STATE_OVERCONSUMPTION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -332,6 +332,32 @@ class SauresHA:
             if obj.get("meter_id") == sensor_id:
                 return SauresSensor(obj)
         return SauresSensor({})
+
+    def get_suspicious_consumption_meters(
+        self, flat_id: Any, controller_sn: str
+    ) -> list[dict[str, Any]]:
+        """Список счётчиков контроллера с активным подозрительным расходом."""
+        result: list[dict[str, Any]] = []
+        for obj in self._sensors.get(flat_id, []):
+            if obj.get("controller_sn") != controller_sn:
+                continue
+            type_number = obj.get("type", {}).get("number")
+            if type_number not in CONF_OVERCONSUMPTION_METER_TYPES:
+                continue
+            state = obj.get("state") or {}
+            if state.get("number") != STATE_OVERCONSUMPTION:
+                continue
+            result.append(
+                {
+                    "meter_id": obj.get("meter_id"),
+                    "meter_name": obj.get("meter_name"),
+                    "condition": state.get("name"),
+                    "condition_number": state.get("number"),
+                    "type": obj.get("type", {}).get("name"),
+                    "input": obj.get("input"),
+                }
+            )
+        return result
 
     def get_binarysensor(self, flat_id: Any, sensor_id: Any) -> SauresSensor:
         """Получить бинарный датчик из кэша по meter_id."""

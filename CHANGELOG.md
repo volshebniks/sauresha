@@ -5,6 +5,14 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 проект следует [Semantic Versioning](https://semver.org/lang/ru/).
 
+## [2.1.5] - 2026-09-13
+
+### Added
+- Бинарный датчик «Подозрительный расход» для счётчиков воды и газа (API `state.number == 3`)
+- Событие Home Assistant `sauresha_suspicious_consumption` при срабатывании
+- Атрибуты `condition_number` и `suspicious_consumption` у сенсоров счётчиков
+- У контроллера атрибуты `suspicious_consumption` и `suspicious_consumption_meters`
+
 ## [2.1.4] - 2026-09-13
 
 ### Added
@@ -109,7 +117,8 @@
 - Необязательная настройка `scan_interval` для sensor (по умолчанию 10 минут)
 - Новые атрибуты у сенсоров
 
-[Unreleased]: https://github.com/volshebniks/sauresha/compare/2.1.4...HEAD
+[Unreleased]: https://github.com/volshebniks/sauresha/compare/2.1.5...HEAD
+[2.1.5]: https://github.com/volshebniks/sauresha/compare/2.1.4...2.1.5
 [2.1.4]: https://github.com/volshebniks/sauresha/compare/2.1.3...2.1.4
 [2.1.3]: https://github.com/volshebniks/sauresha/compare/2.1.2...2.1.3
 [2.1.2]: https://github.com/volshebniks/sauresha/compare/2.1.1...2.1.2

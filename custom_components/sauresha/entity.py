@@ -31,6 +31,8 @@ from .const import (
     CONF_COMMAND_ACTIVATE,
     CONF_COMMAND_DEACTIVATE,
     DOMAIN,
+    EVENT_SUSPICIOUS_CONSUMPTION,
+    STATE_OVERCONSUMPTION,
     controller_device_identifier,
 )
 from .coordinator import SauresDataUpdateCoordinator
@@ -217,12 +219,14 @@ class SauresSensor(SauresEntity, SensorEntity):  # pyright: ignore[reportIncompa
         self._attr_native_value = value
         attrs: dict[str, Any] = {
             "condition": meter.state,
+            "condition_number": meter.state_number,
             "sn": meter.sn,
             "type": meter.type,
             "meter_id": meter.meter_id,
             "input": meter.input,
             "approve_dt": meter.approve_dt,
             "controller_sn": self.controller_sn,
+            "suspicious_consumption": meter.state_number == STATE_OVERCONSUMPTION,
         }
         if meter.type_number == 8:
             attrs.update(
@@ -289,6 +293,7 @@ class SauresTariffSensor(SauresEntity, SensorEntity):  # pyright: ignore[reportI
         self._attr_native_value = value
         self._attr_extra_state_attributes = {
             "condition": meter.state,
+            "condition_number": meter.state_number,
             "sn": meter.sn,
             "type": meter.type,
             "meter_id": meter.meter_id,
@@ -350,12 +355,84 @@ class SauresBinarySensor(SauresEntity, BinarySensorEntity):  # pyright: ignore[r
         self._attr_is_on = _parse_bool_state(value)
         self._attr_extra_state_attributes = {
             "condition": meter.state,
+            "condition_number": meter.state_number,
             "sn": meter.sn,
             "type": meter.type,
             "meter_id": meter.meter_id,
             "input": meter.input,
             "controller_sn": self.controller_sn,
         }
+
+
+class SauresSuspiciousConsumptionBinarySensor(
+    SauresEntity, BinarySensorEntity
+):  # pyright: ignore[reportIncompatibleVariableOverride]
+    """Бинарный датчик «Подозрительный расход» (meter.state.number == 3)."""
+
+    def __init__(
+        self,
+        coordinator: SauresDataUpdateCoordinator,
+        flat_id: Any,
+        meter_id: Any,
+        serial_number: str,
+        counter_name: str,
+        *,
+        controller_sn: str,
+        controller_name: str | None = None,
+        controller_hardware: str | None = None,
+        controller_firmware: str | None = None,
+    ) -> None:
+        """Инициализировать датчик подозрительного расхода."""
+        base = counter_name or f"[{flat_id}] [{meter_id}]"
+        display_name = f"[SAURES] Подозрительный расход {base}"
+        super().__init__(
+            coordinator,
+            flat_id,
+            f"{meter_id}_overconsumption",
+            display_name,
+            controller_sn=controller_sn,
+            serial_number=serial_number,
+            controller_name=controller_name,
+            controller_hardware=controller_hardware,
+            controller_firmware=controller_firmware,
+        )
+        self.meter_id = meter_id
+        self._attr_device_class = BinarySensorDeviceClass.PROBLEM
+        self._attr_icon = "mdi:pipe-leak"
+        self._was_on: bool | None = None
+        self._update_from_coordinator()
+
+    def _update_from_coordinator(self) -> None:
+        """Обновить флаг подозрительного расхода и при срабатывании послать событие."""
+        meter = self.api.get_sensor(self.flat_id, self.meter_id)
+        is_on = meter.state_number == STATE_OVERCONSUMPTION
+        prev = self._was_on
+        self._attr_is_on = is_on
+        self._attr_extra_state_attributes = {
+            "condition": meter.state,
+            "condition_number": meter.state_number,
+            "sn": meter.sn,
+            "type": meter.type,
+            "meter_id": meter.meter_id,
+            "input": meter.input,
+            "controller_sn": self.controller_sn,
+            "meter_name": meter.name,
+        }
+        # Событие только при переходе в активное состояние (аналог push от Saures)
+        if is_on and prev is False and self.hass is not None:
+            self.hass.bus.async_fire(
+                EVENT_SUSPICIOUS_CONSUMPTION,
+                {
+                    "flat_id": self.flat_id,
+                    "controller_sn": self.controller_sn,
+                    "meter_id": meter.meter_id,
+                    "meter_name": meter.name,
+                    "condition": meter.state,
+                    "condition_number": meter.state_number,
+                    "entity_id": self.entity_id,
+                },
+            )
+        self._was_on = is_on
 
 
 class SauresControllerSensor(SauresEntity, SensorEntity):  # pyright: ignore[reportIncompatibleVariableOverride]
@@ -395,6 +472,9 @@ class SauresControllerSensor(SauresEntity, SensorEntity):  # pyright: ignore[rep
     def _update_from_coordinator(self) -> None:
         """Обновить состояние и атрибуты контроллера из кэша API."""
         my_controller = self.api.get_controller(self.flat_id, self.serial_number)
+        suspicious = self.api.get_suspicious_consumption_meters(
+            self.flat_id, self.serial_number
+        )
         self._attr_native_value = my_controller.state
         self._attr_extra_state_attributes = {
             ATTR_BATTERY_LEVEL: my_controller.battery,
@@ -417,6 +497,8 @@ class SauresControllerSensor(SauresEntity, SensorEntity):  # pyright: ignore[rep
             "log": my_controller.log,
             "cap_state": my_controller.cap_state,
             "power_supply": my_controller.power_supply,
+            "suspicious_consumption": bool(suspicious),
+            "suspicious_consumption_meters": suspicious,
         }
 
 
@@ -464,6 +546,7 @@ class SauresSwitch(SauresEntity, SwitchEntity):  # pyright: ignore[reportIncompa
         self._attr_is_on = _parse_bool_state(meter.value)
         self._attr_extra_state_attributes = {
             "condition": meter.state,
+            "condition_number": meter.state_number,
             "sn": meter.sn,
             "type": meter.type,
             "meter_id": meter.meter_id,

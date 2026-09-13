@@ -44,7 +44,9 @@ class SauresSensor:
         self.name = data.get("meter_name")
         self.type_number = data.get("type", {}).get("number")
         self.type = data.get("type", {}).get("name")
-        self.state = data.get("state", {}).get("name")
+        state = data.get("state") or {}
+        self.state = state.get("name")
+        self.state_number = state.get("number")
         self.sn = data.get("sn")
         self.value = data.get("value")
         self.meter_id = data.get("meter_id")

@@ -7,7 +7,7 @@ from homeassistant.const import Platform
 
 NAME = "Saures"
 DOMAIN = "sauresha"
-VERSION = "2.1.4"
+VERSION = "2.1.5"
 ATTRIBUTION = "Home assistant component for Saures"
 ISSUE_URL = "https://github.com/volshebniks/sauresha/issues"
 
@@ -34,8 +34,13 @@ CONF_BINARY_SENSORS_DEF = [9, 10]
 CONF_BINARY_SENSOR_DEV_CLASS_MOISTURE_DEF = [9]
 CONF_BINARY_SENSOR_DEV_CLASS_OPENING_DEF = [10]
 CONF_SWITCH_DEF = [6]
+# Счётчики, для которых API детектирует «подозрительный расход» (state.number == 3)
+CONF_OVERCONSUMPTION_METER_TYPES = [1, 2, 3]
+# meter.state.number: перерасход ресурса / подозрительный расход
+STATE_OVERCONSUMPTION = 3
 
 COORDINATOR = "coordinator"
+EVENT_SUSPICIOUS_CONSUMPTION = f"{DOMAIN}_suspicious_consumption"
 
 # Command
 CONF_COMMAND_ACTIVATE = "activate"

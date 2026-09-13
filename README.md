@@ -82,6 +82,12 @@
  * добавлена поддержка теплосчётчиков типов 11 (кВт·ч) и 13 (Гкал)
  * ошибка одного счётчика при setup больше не блокирует остальные сенсоры объекта
 
+## Update 13: Начиная с версии 2.1.5:
+ * binary_sensor «Подозрительный расход» для счётчиков холодной/горячей воды и газа (API state.number = 3)
+ * событие Home Assistant `sauresha_suspicious_consumption` при срабатывании
+ * у счётчиков: атрибуты `condition_number`, `suspicious_consumption`
+ * у контроллера: атрибуты `suspicious_consumption`, `suspicious_consumption_meters`
+
 ## Содержание
 
 * [Установка](#установка)
@@ -108,6 +114,7 @@
 13. Счётчик тепла (Гкал) = sensor в Home Assistant
 14. Датчик давления (бар) = sensor в Home Assistant
 — Непосредственно сами контроллеры = sensor в Home Assistant
+— Подозрительный расход по счётчикам воды/газа (API state = 3) = binary_sensor + событие `sauresha_suspicious_consumption`
 
 ## Установка
 
