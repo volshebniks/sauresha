@@ -152,6 +152,7 @@ class SauresSensor(SauresEntity, SensorEntity):  # pyright: ignore[reportIncompa
         )
         self.meter_id = meter_id
         self._attr_icon = "mdi:counter"
+        self._expects_numeric = False
         self._apply_type(type_number, values_count)
         self._update_from_coordinator()
 
@@ -161,14 +162,17 @@ class SauresSensor(SauresEntity, SensorEntity):  # pyright: ignore[reportIncompa
             self._attr_native_unit_of_measurement = UnitOfVolume.CUBIC_METERS
             self._attr_device_class = SensorDeviceClass.WATER
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+            self._expects_numeric = True
         elif type_number == 3:
             self._attr_native_unit_of_measurement = UnitOfVolume.CUBIC_METERS
             self._attr_device_class = SensorDeviceClass.GAS
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+            self._expects_numeric = True
         elif type_number == 5:
             self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
             self._attr_state_class = SensorStateClass.MEASUREMENT
+            self._expects_numeric = True
         elif type_number == 8:
             # Многотарифные счётчики отдают строку "t1/t2/..." — без unit/device_class.
             # Числовые тарифы создаются отдельными сущностями.
@@ -176,6 +180,7 @@ class SauresSensor(SauresEntity, SensorEntity):  # pyright: ignore[reportIncompa
                 self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
                 self._attr_device_class = SensorDeviceClass.ENERGY
                 self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+                self._expects_numeric = True
 
     def _update_from_coordinator(self) -> None:
         """Обновить значение и атрибуты счётчика из кэша API."""
@@ -186,7 +191,8 @@ class SauresSensor(SauresEntity, SensorEntity):  # pyright: ignore[reportIncompa
             self._attr_native_unit_of_measurement = None
             self._attr_device_class = None
             self._attr_state_class = None
-        elif self._attr_native_unit_of_measurement is not None:
+            self._expects_numeric = False
+        elif self._expects_numeric:
             try:
                 value = float(value)
             except (TypeError, ValueError):

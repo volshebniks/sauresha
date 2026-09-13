@@ -5,6 +5,11 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 проект следует [Semantic Versioning](https://semver.org/lang/ru/).
 
+## [2.1.2] - 2026-09-13
+
+### Fixed
+- Ошибка `AttributeError: __attr_native_unit_of_measurement` при создании сенсоров (чтение `_attr_*` до инициализации в новых версиях HA)
+
 ## [2.1.1] - 2026-09-12
 
 ### Added
@@ -89,7 +94,8 @@
 - Необязательная настройка `scan_interval` для sensor (по умолчанию 10 минут)
 - Новые атрибуты у сенсоров
 
-[Unreleased]: https://github.com/volshebniks/sauresha/compare/2.1.1...HEAD
+[Unreleased]: https://github.com/volshebniks/sauresha/compare/2.1.2...HEAD
+[2.1.2]: https://github.com/volshebniks/sauresha/compare/2.1.1...2.1.2
 [2.1.1]: https://github.com/volshebniks/sauresha/compare/2.1.0...2.1.1
 [2.1.0]: https://github.com/volshebniks/sauresha/compare/2.0.0...2.1.0
 [2.0.0]: https://github.com/volshebniks/sauresha/compare/v.1.0.4...2.0.0
