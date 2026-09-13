@@ -7,7 +7,7 @@ from homeassistant.const import Platform
 
 NAME = "Saures"
 DOMAIN = "sauresha"
-VERSION = "2.1.5"
+VERSION = "2.1.6"
 ATTRIBUTION = "Home assistant component for Saures"
 ISSUE_URL = "https://github.com/volshebniks/sauresha/issues"
 

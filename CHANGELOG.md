@@ -5,6 +5,11 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 проект следует [Semantic Versioning](https://semver.org/lang/ru/).
 
+## [2.1.6] - 2026-09-13
+
+### Fixed
+- У датчика давления снова выставляются `unit_of_measurement` (бар), `device_class` (pressure) и `state_class` (measurement): склейка нескольких `vals` через `/` больше не сбрасывает метаданные у неэлектрических сенсоров
+
 ## [2.1.5] - 2026-09-13
 
 ### Added
@@ -117,7 +122,8 @@
 - Необязательная настройка `scan_interval` для sensor (по умолчанию 10 минут)
 - Новые атрибуты у сенсоров
 
-[Unreleased]: https://github.com/volshebniks/sauresha/compare/2.1.5...HEAD
+[Unreleased]: https://github.com/volshebniks/sauresha/compare/2.1.6...HEAD
+[2.1.6]: https://github.com/volshebniks/sauresha/compare/2.1.5...2.1.6
 [2.1.5]: https://github.com/volshebniks/sauresha/compare/2.1.4...2.1.5
 [2.1.4]: https://github.com/volshebniks/sauresha/compare/2.1.3...2.1.4
 [2.1.3]: https://github.com/volshebniks/sauresha/compare/2.1.2...2.1.3

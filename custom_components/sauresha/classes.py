@@ -42,7 +42,11 @@ class SauresSensor:
         data = data or {}
         self.data = data
         self.name = data.get("meter_name")
-        self.type_number = data.get("type", {}).get("number")
+        raw_type = data.get("type", {}).get("number")
+        try:
+            self.type_number = int(raw_type) if raw_type is not None else None
+        except (TypeError, ValueError):
+            self.type_number = None
         self.type = data.get("type", {}).get("name")
         state = data.get("state") or {}
         self.state = state.get("name")
@@ -59,23 +63,24 @@ class SauresSensor:
 
         self.values = data.get("vals") or []
 
-        if len(self.values) == 2:
-            self.value = f"{self.values[0]}/{self.values[1]}"
-            self.t1 = self.values[0]
-            self.t2 = self.values[1]
-        elif len(self.values) == 3:
-            self.value = f"{self.values[0]}/{self.values[1]}/{self.values[2]}"
-            self.t1 = self.values[0]
-            self.t2 = self.values[1]
-            self.t3 = self.values[2]
-        elif len(self.values) == 4:
-            self.value = (
-                f"{self.values[0]}/{self.values[1]}/{self.values[2]}/{self.values[3]}"
-            )
-            self.t1 = self.values[0]
-            self.t2 = self.values[1]
-            self.t3 = self.values[2]
-            self.t4 = self.values[3]
-        elif len(self.values) == 1:
+        # Многотарифная склейка "t1/t2/..." — только для электроэнергии (тип 8).
+        # У других типов (давление и т.п.) при нескольких vals берём первое значение.
+        if self.type_number == 8 and len(self.values) > 1:
+            self.value = "/".join(str(v) for v in self.values)
+            if len(self.values) >= 1:
+                self.t1 = self.values[0]
+            if len(self.values) >= 2:
+                self.t2 = self.values[1]
+            if len(self.values) >= 3:
+                self.t3 = self.values[2]
+            if len(self.values) >= 4:
+                self.t4 = self.values[3]
+        elif len(self.values) >= 1:
             self.value = self.values[0]
             self.t1 = self.values[0]
+            if len(self.values) >= 2:
+                self.t2 = self.values[1]
+            if len(self.values) >= 3:
+                self.t3 = self.values[2]
+            if len(self.values) >= 4:
+                self.t4 = self.values[3]

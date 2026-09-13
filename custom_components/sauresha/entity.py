@@ -156,11 +156,23 @@ class SauresSensor(SauresEntity, SensorEntity):  # pyright: ignore[reportIncompa
         self.meter_id = meter_id
         self._attr_icon = "mdi:counter"
         self._expects_numeric = False
-        self._apply_type(type_number, values_count)
+        self._type_number = self._coerce_type_number(type_number)
+        self._apply_type(self._type_number, values_count)
         self._update_from_coordinator()
+
+    @staticmethod
+    def _coerce_type_number(type_number: Any) -> int | None:
+        """Привести номер типа API к int (API иногда отдаёт строку)."""
+        if type_number is None:
+            return None
+        try:
+            return int(type_number)
+        except (TypeError, ValueError):
+            return None
 
     def _apply_type(self, type_number: int | None, values_count: int = 0) -> None:
         """Задать device_class и единицы измерения по типу счётчика Saures."""
+        self._expects_numeric = False
         if type_number in (1, 2):
             self._attr_native_unit_of_measurement = UnitOfVolume.CUBIC_METERS
             self._attr_device_class = SensorDeviceClass.WATER
@@ -184,6 +196,10 @@ class SauresSensor(SauresEntity, SensorEntity):  # pyright: ignore[reportIncompa
                 self._attr_device_class = SensorDeviceClass.ENERGY
                 self._attr_state_class = SensorStateClass.TOTAL_INCREASING
                 self._expects_numeric = True
+            else:
+                self._attr_native_unit_of_measurement = None
+                self._attr_device_class = None
+                self._attr_state_class = None
         elif type_number == 11:
             self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
             self._attr_device_class = SensorDeviceClass.ENERGY
@@ -204,9 +220,24 @@ class SauresSensor(SauresEntity, SensorEntity):  # pyright: ignore[reportIncompa
     def _update_from_coordinator(self) -> None:
         """Обновить значение и атрибуты счётчика из кэша API."""
         meter = self.api.get_sensor(self.flat_id, self.meter_id)
+        type_number = self._coerce_type_number(meter.type_number)
+        if type_number is None:
+            type_number = self._type_number
+        else:
+            self._type_number = type_number
+
+        values_count = len(meter.values or [])
+        # Повторно применяем тип: unit/device_class не должны сбрасываться
+        # из‑за склейки vals или позднего появления type в ответе API.
+        self._apply_type(type_number, values_count)
+
         value = meter.value
-        # Если пришла комбинированная строка тарифов — не оставляем numeric unit
-        if isinstance(value, str) and "/" in value:
+        # Комбинированная строка тарифов — только для электроэнергии (тип 8)
+        if (
+            type_number == 8
+            and isinstance(value, str)
+            and "/" in value
+        ):
             self._attr_native_unit_of_measurement = None
             self._attr_device_class = None
             self._attr_state_class = None
@@ -228,7 +259,7 @@ class SauresSensor(SauresEntity, SensorEntity):  # pyright: ignore[reportIncompa
             "controller_sn": self.controller_sn,
             "suspicious_consumption": meter.state_number == STATE_OVERCONSUMPTION,
         }
-        if meter.type_number == 8:
+        if type_number == 8:
             attrs.update(
                 {
                     "t1": meter.t1,

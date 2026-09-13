@@ -88,6 +88,9 @@
  * у счётчиков: атрибуты `condition_number`, `suspicious_consumption`
  * у контроллера: атрибуты `suspicious_consumption`, `suspicious_consumption_meters`
 
+## Update 14: Начиная с версии 2.1.6:
+ * у датчика давления корректно выставляются unit (бар), device_class (pressure) и state_class (measurement)
+
 ## Содержание
 
 * [Установка](#установка)
