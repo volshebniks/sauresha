@@ -5,6 +5,16 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 проект следует [Semantic Versioning](https://semver.org/lang/ru/).
 
+## [2.1.4] - 2026-09-13
+
+### Added
+- Поддержка датчика давления (тип Saures 14): `device_class` pressure, единица бар
+- Поддержка теплосчётчиков типов 11 (кВт·ч) и 13 (Гкал)
+
+### Fixed
+- Датчик давления больше не теряется при создании сущностей (ошибка на типах без заранее заданной единицы измерения)
+- Ошибка одного счётчика при setup больше не блокирует остальные сенсоры объекта
+
 ## [2.1.3] - 2026-09-13
 
 ### Fixed
@@ -99,7 +109,8 @@
 - Необязательная настройка `scan_interval` для sensor (по умолчанию 10 минут)
 - Новые атрибуты у сенсоров
 
-[Unreleased]: https://github.com/volshebniks/sauresha/compare/2.1.3...HEAD
+[Unreleased]: https://github.com/volshebniks/sauresha/compare/2.1.4...HEAD
+[2.1.4]: https://github.com/volshebniks/sauresha/compare/2.1.3...2.1.4
 [2.1.3]: https://github.com/volshebniks/sauresha/compare/2.1.2...2.1.3
 [2.1.2]: https://github.com/volshebniks/sauresha/compare/2.1.1...2.1.2
 [2.1.1]: https://github.com/volshebniks/sauresha/compare/2.1.0...2.1.1

@@ -17,6 +17,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     UnitOfEnergy,
+    UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolume,
 )
@@ -181,6 +182,22 @@ class SauresSensor(SauresEntity, SensorEntity):  # pyright: ignore[reportIncompa
                 self._attr_device_class = SensorDeviceClass.ENERGY
                 self._attr_state_class = SensorStateClass.TOTAL_INCREASING
                 self._expects_numeric = True
+        elif type_number == 11:
+            self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+            self._attr_device_class = SensorDeviceClass.ENERGY
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+            self._expects_numeric = True
+        elif type_number == 13:
+            self._attr_native_unit_of_measurement = UnitOfEnergy.GIGA_CALORIE
+            self._attr_device_class = SensorDeviceClass.ENERGY
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+            self._expects_numeric = True
+        elif type_number == 14:
+            # Давление (скважина и т.п.), единица API — бар
+            self._attr_native_unit_of_measurement = UnitOfPressure.BAR
+            self._attr_device_class = SensorDeviceClass.PRESSURE
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+            self._expects_numeric = True
 
     def _update_from_coordinator(self) -> None:
         """Обновить значение и атрибуты счётчика из кэша API."""
