@@ -192,7 +192,7 @@ class SauresSensor(SauresEntity, SensorEntity):  # pyright: ignore[reportIncompa
             self._attr_device_class = None
             self._attr_state_class = None
             self._expects_numeric = False
-        elif self._expects_numeric:
+        elif self._expects_numeric and value is not None:
             try:
                 value = float(value)
             except (TypeError, ValueError):
